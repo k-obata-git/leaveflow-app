@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Modal, Table, Badge, Button, Spinner } from "react-bootstrap";
 import { useToast } from "@/components/providers/ToastProvider";
 import { adminHistory } from "@/lib/adminApi";
+import { useLoading } from "../providers/LoadingProvider";
 
 export type GrantTx = {
   id: string;
@@ -26,8 +27,8 @@ export default function GrantHistoryModal({
   limit?: number;
 }) {
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [rows, setRows] = useState<GrantTx[] | null>(preset ?? null);
-  const [loading, setLoading] = useState(!preset);
 
   useEffect(() => {
     if (!open || preset) {
@@ -35,7 +36,7 @@ export default function GrantHistoryModal({
     }
 
     (async () => {
-      setLoading(true);
+      showLoading();
       try {
         const res = await adminHistory(userId, limit);
         setRows(res);
@@ -43,7 +44,7 @@ export default function GrantHistoryModal({
         setRows([]);
         toast.error(`${e?.message || "付与履歴の取得に失敗"}`);
       } finally {
-        setLoading(false);
+        hideLoading();
       }
     })();
   }, [open, userId, limit, preset]);
@@ -54,13 +55,7 @@ export default function GrantHistoryModal({
         <Modal.Title>付与履歴</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {loading && (
-          <div className="text-center py-4">
-            <Spinner animation="border" role="status" />
-          </div>
-        )}
-
-        {!loading && (rows?.length ?? 0) > 0 && (
+        {(rows?.length ?? 0) > 0 && (
           <>
             {/* Desktop */}
             <div className="table-desktop">
@@ -101,7 +96,7 @@ export default function GrantHistoryModal({
           </>
         )}
 
-        {!loading && (!rows || rows.length === 0) && (
+        {!rows || rows.length === 0 && (
           <div className="text-center text-muted py-3">付与履歴はありません</div>
         )}
       </Modal.Body>

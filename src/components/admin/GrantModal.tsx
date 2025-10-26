@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { adminGrantManual } from "@/lib/adminApi";
+import { useLoading } from "../providers/LoadingProvider";
 
 type Props = {
   show: boolean;
@@ -13,11 +14,13 @@ type Props = {
 };
 
 export default function GrantModal({ show, onClose, userIds, onDone, onError }: Props) {
+  const { showLoading, hideLoading } = useLoading();
   const [date, setDate] = useState<string>("");     // 任意。空なら今日
   const [days, setDays] = useState<string>("");     // 任意。空なら自動計算（勤続年数/比例）
   const [note, setNote] = useState<string>("");
 
   async function handleGrant() {
+    showLoading();
     try {
       const payload: any = { userIds };
       if (date) {
@@ -38,6 +41,7 @@ export default function GrantModal({ show, onClose, userIds, onDone, onError }: 
       setDate("");
       setDays("");
       setNote("");
+      hideLoading();
     }
   }
 

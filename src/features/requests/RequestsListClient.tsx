@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { getRequestStatusItem, RequestStatusKey } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, UnitKey } from "@/lib/requests/unit";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 type TabKey = "all" | "applied-pending" | "applied-rejected" | "approver-pending";
 type MineKey = "me" | "others";
@@ -30,6 +31,7 @@ export default function RequestsListClient({
   isAdmin: boolean;
 }) {
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,7 +39,6 @@ export default function RequestsListClient({
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [mine, setMine] = useState<MineKey>(initialMine);
   const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // modal（承認/差戻 コメント）
   const [modalOpen, setModalOpen] = useState(false);
@@ -57,27 +58,31 @@ export default function RequestsListClient({
   useEffect(() => {
     const current = searchParams.toString();
     if (current !== query) router.replace(`${pathname}?${query}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   // データ取得
   const load = async() => {
-    setLoading(true);
-    const res = await fetch(`/api/requests/list?${query}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      cache: "no-store",
-    });
+    showLoading();
+    try {
+      const res = await fetch(`/api/requests/list?${query}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        cache: "no-store",
+      });
 
-    const responseJson = await res.json();
-    if (res.ok) {
-      setRows(responseJson.data);
-    } else {
-      console.error(responseJson);
+      const responseJson = await res.json();
+      if (res.ok) {
+        setRows(responseJson.data);
+      } else {
+        console.error(responseJson);
+      }
+    } catch (e: any) {
+      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
     }
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -87,10 +92,13 @@ export default function RequestsListClient({
   }, [query]);
 
   async function submitAction() {
-    if (!modalTargetId) return;
+    if (!modalTargetId) {
+      return;
+    }
 
-    const path = modalAction === "approve" ? `/api/requests/${modalTargetId}/approve` : `/api/requests/${modalTargetId}/reject`;
+    showLoading();
     try {
+      const path = modalAction === "approve" ? `/api/requests/${modalTargetId}/approve` : `/api/requests/${modalTargetId}/reject`;
       const res = await fetch(path, {
         method: "PUT",
         headers: {
@@ -112,6 +120,8 @@ export default function RequestsListClient({
       }
     } catch (e: any) {
       toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -181,50 +191,43 @@ export default function RequestsListClient({
             </tr>
           </thead>
           <tbody>
-            {!loading &&
-              rows?.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.title}</td>
-                  <td className="text-nowrap">
-                    {new Date(r.startDate).toLocaleDateString()} 〜{" "}
-                    {new Date(r.endDate).toLocaleDateString()}
-                  </td>
-                  <td className="text-nowrap">{getRequestUnitItem(r.unit)?.label}</td>
-                  {tab === "approver-pending" && <td className="text-nowrap">{r.requesterName}</td>}
-                  <td>
-                    <Badge bg={getRequestStatusItem(r.status)?.color}>{getRequestStatusItem(r.status)?.label}</Badge>
-                  </td>
-                  <td className="text-nowrap">
-                    <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${r.id}`)} >詳細</Button>
-                  </td>
-                  {tab === "approver-pending" && (
-                    <td className="text-nowrap">
-                      <Button variant="success" size="sm" className="me-2"
-                        onClick={() => {
-                          setModalAction("approve");
-                          setModalTargetId(r.id);
-                          setModalOpen(true);
-                        }}
-                      >承認</Button>
-                      <Button variant="outline-danger" size="sm"
-                        onClick={() => {
-                          setModalAction("reject");
-                          setModalTargetId(r.id);
-                          setModalOpen(true);
-                        }}
-                      >差戻</Button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            {loading && (
-              <tr>
-                <td colSpan={tab === "approver-pending" ? 7 : 5} className="text-center text-muted">
-                  読み込み中
+            {rows?.map((r) => (
+              <tr key={r.id}>
+                <td>{r.title}</td>
+                <td className="text-nowrap">
+                  {new Date(r.startDate).toLocaleDateString()} 〜{" "}
+                  {new Date(r.endDate).toLocaleDateString()}
                 </td>
+                <td className="text-nowrap">{getRequestUnitItem(r.unit)?.label}</td>
+                {tab === "approver-pending" && <td className="text-nowrap">{r.requesterName}</td>}
+                <td>
+                  <Badge bg={getRequestStatusItem(r.status)?.color}>{getRequestStatusItem(r.status)?.label}</Badge>
+                </td>
+                <td className="text-nowrap">
+                  <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${r.id}`)} >詳細</Button>
+                </td>
+                {tab === "approver-pending" && (
+                  <td className="text-nowrap">
+                    <Button variant="success" size="sm" className="me-2"
+                      onClick={() => {
+                        setModalAction("approve");
+                        setModalTargetId(r.id);
+                        setModalOpen(true);
+                      }}
+                    >承認</Button>
+                    <Button variant="outline-danger" size="sm"
+                      onClick={() => {
+                        setModalAction("reject");
+                        setModalTargetId(r.id);
+                        setModalOpen(true);
+                      }}
+                    >差戻</Button>
+                  </td>
+                )}
               </tr>
-            )}
-            {!loading && rows.length === 0 && (
+            ))}
+
+            {rows.length === 0 && (
               <tr>
                 <td colSpan={tab === "approver-pending" ? 7 : 5} className="text-center text-muted">
                   データがありません
@@ -275,7 +278,7 @@ export default function RequestsListClient({
             </div>
           </div>
         ))}
-        {!loading && rows.length === 0 && (
+        {rows.length === 0 && (
           <div className="text-center text-muted py-3">データがありません</div>
         )}
       </div>

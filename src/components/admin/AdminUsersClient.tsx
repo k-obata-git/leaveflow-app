@@ -5,6 +5,7 @@ import { Table, Button, Form, InputGroup } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { adminUserList } from "@/lib/adminApi";
+import { useLoading } from "../providers/LoadingProvider";
 
 type UserRow = {
   id: string;
@@ -16,14 +17,14 @@ type UserRow = {
 };
 
 export default function AdminUsersClient() {
-  const toast = useToast();
   const router = useRouter();
+  const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [rows, setRows] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
 
   async function load() {
-    setLoading(true);
+    showLoading();
     try {
       const res = await adminUserList();
       setRows(res);
@@ -31,7 +32,7 @@ export default function AdminUsersClient() {
       setRows([]);
       toast.error(`${e?.message || "ユーザ取得に失敗"}`);
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }
 
@@ -75,7 +76,7 @@ export default function AdminUsersClient() {
             </tr>
           </thead>
           <tbody>
-            {!loading && filtered.map(u => (
+            {filtered?.map(u => (
               <tr key={u.id}>
                 <td>{u.name || "-"}</td>
                 <td>{u.email || "-"}</td>
@@ -87,12 +88,7 @@ export default function AdminUsersClient() {
                 </td>
               </tr>
             ))}
-            {loading && (
-              <tr>
-                <td colSpan={6} className="text-center text-muted">読み込み中</td>
-              </tr>
-            )}
-            {!loading && filtered.length === 0 && (
+            {filtered?.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center text-muted">該当なし</td>
               </tr>
@@ -103,7 +99,7 @@ export default function AdminUsersClient() {
 
       {/* モバイル: カード */}
       <div className="cards-mobile">
-        {!loading && filtered.map(u => (
+        {filtered?.map(u => (
           <div key={u.id} className="card p-3">
             <div className="d-flex justify-content-between align-items-start mb-1">
               <div className="fw-bold">{u.name || "(無名)"}</div>
@@ -117,10 +113,7 @@ export default function AdminUsersClient() {
             </div>
           </div>
         ))}
-        {loading && (
-          <div className="text-center text-muted py-2">読み込み中</div>
-        )}
-        {!loading && filtered.length === 0 && (
+        {filtered?.length === 0 && (
           <div className="text-center text-muted py-2">該当なし</div>
         )}
       </div>

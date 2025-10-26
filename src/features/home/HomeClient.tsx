@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, ButtonGroup, Card, Col, ProgressBar, Row, Spinner, Table, } from "react-bootstrap";
+import { Badge, Button, ButtonGroup, Card, Col, ProgressBar, Row, Table, } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { getRequestStatusItem, RequestStatusKey } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, UnitKey } from "@/lib/requests/unit";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 type Summary = {
   me: {
@@ -35,10 +36,10 @@ type RowLite = {
 
 export default function HomeClient() {
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const router = useRouter();
 
   const [sum, setSum] = useState<Summary | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [tab, setTab] = useState<"mine" | "approvals">("mine");
   const isAdmin = sum?.me.role === "ADMIN";
@@ -47,41 +48,44 @@ export default function HomeClient() {
   const [recent, setRecent] = useState<RowLite[]>([]);
   const [pendings, setPendings] = useState<RowLite[]>([]);
 
+  const load = async() => {
+    showLoading();
+    try {
+      const [summaryResponse, recentResponse, pendingResponse] = await Promise.all([
+        fetch("/api/home/summary", { cache: "no-store" }),
+        // 最近の申請（自分：直近5件）
+        fetch("/api/requests/list?tab=all&limit=5", { cache: "no-store" }),
+        // 承認待ち（自分が承認者）
+        fetch("/api/requests/list?tab=approver-pending&limit=5", { cache: "no-store" }),
+      ]);
+
+      if(!summaryResponse.ok || !recentResponse.ok || !pendingResponse.ok) {
+        throw new Error('API Request Error')
+      }
+
+      const summaryRes = await summaryResponse.json();
+      const recentRes = await recentResponse.json();
+      const pendingRes = await pendingResponse.json();
+      if(summaryRes.ok) {
+        setSum(await summaryRes.data || []);
+      }
+      if(recentRes.ok) {
+        setRecent(recentRes.data || []);
+      }
+      if(pendingRes.ok) {
+        setPendings(pendingRes.data || []);
+      }
+    } catch (e: any) {
+      // console.log(e.message)
+      toast.error(`ホームの読み込みに失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
+    }
+  }
+
   // 初期ロード
   useEffect(() => {
-    (async () => {
-      try {
-        const [summaryResponse, recentResponse, pendingResponse] = await Promise.all([
-          fetch("/api/home/summary", { cache: "no-store" }),
-          // 最近の申請（自分：直近5件）
-          fetch("/api/requests/list?tab=all&limit=5", { cache: "no-store" }),
-          // 承認待ち（自分が承認者）
-          fetch("/api/requests/list?tab=approver-pending&limit=5", { cache: "no-store" }),
-        ]);
-
-        if(!summaryResponse.ok || !recentResponse.ok || !pendingResponse.ok) {
-          throw new Error('API Request Error')
-        }
-
-        const summaryRes = await summaryResponse.json();
-        const recentRes = await recentResponse.json();
-        const pendingRes = await pendingResponse.json();
-        if(summaryRes.ok) {
-          setSum(await summaryRes.data || []);
-        }
-        if(recentRes.ok) {
-          setRecent(recentRes.data || []);
-        }
-        if(pendingRes.ok) {
-          setPendings(pendingRes.data || []);
-        }
-      } catch (e: any) {
-        // console.log(e.message)
-        toast.error(`ホームの読み込みに失敗しました：${e?.message || "エラー"}`);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    load();
   }, []);
 
   const greeting = useMemo(() => {
@@ -188,13 +192,9 @@ export default function HomeClient() {
           </ButtonGroup>
         </Card.Header>
         <Card.Body>
-          {loading && (
-            <div className="text-center py-4">
-              <Spinner animation="border" role="status" />
-            </div>
-          )}
 
-          {!loading && tab==="mine" && (
+
+          {tab==="mine" && (
             <>
               <div className="table-desktop">
                 <Table striped hover responsive="sm" className="mb-0">
@@ -253,7 +253,7 @@ export default function HomeClient() {
             </>
           )}
 
-          {!loading && tab==="approvals" && (
+          {tab==="approvals" && (
             <>
               <div className="table-desktop">
                 <Table striped hover responsive="sm" className="mb-0">
