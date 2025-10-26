@@ -19,7 +19,7 @@ export default function MobileBottomNav({user} : Prors) {
   }
 
   return (
-    <nav className="mobile-bottom-nav" aria-label="主要ナビゲーション">
+    <nav className={`${user?.role === "ADMIN" ? "mobile-bottom-nav admin" : "mobile-bottom-nav"}`} aria-label="主要ナビゲーション">
       <Link href="/" className={`item ${act("/")}`}>
         <House className="mnav-ico" />
         <span className="label">ホーム</span>
