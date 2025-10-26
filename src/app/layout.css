@@ -1,6 +1,7 @@
 /* ミニマルサイドナビ（アイコン＋ラベル縦積み） */
 .sidenav-mini {
-  width: 80px; /* 少しだけ広げる */
+  min-width: 60px;
+  width: 60px; /* 少しだけ広げる */
   min-height: calc(100vh - 40px - 1rem);
   background: var(--bs-light);
 }

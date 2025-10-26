@@ -1,31 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button, ButtonGroup, Card, Spinner } from "react-bootstrap";
+import { useState } from "react";
+import { Button, ButtonGroup, Card } from "react-bootstrap";
 import AdminAuditClient from "@/components/admin/AdminAuditClient";
 import AdminBalancesClient from "@/components/admin/AdminBalancesClient";
 import AdminUsersClient from "@/components/admin/AdminUsersClient";
 
 export default function AdminHomeClient() {
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"users" | "balances" | "audit">("users");
-
-  // 初期ロード
-  useEffect(() => {
-    (async () => {
-      try {
-
-      } catch (e: any) {
-
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
 
   return (
     <div>
-
       <div className="mb-3">
         <ButtonGroup aria-label="view switch" className="w-100 w-sm-auto">
           <Button
@@ -48,32 +33,17 @@ export default function AdminHomeClient() {
 
       <Card className="mb-2 shadow-sm">
         <Card.Body>
-          {loading && (
-            <div className="text-center py-4">
-              <Spinner animation="border" role="status" />
-            </div>
-          )}
-          {!loading && tab==="users" && (
+          {tab==="users" && (
             <AdminUsersClient />
           )}
-          {!loading && tab==="balances" && (
+          {tab==="balances" && (
             <AdminBalancesClient />
           )}
-          {!loading && tab==="audit" && (
+          {tab==="audit" && (
             <AdminAuditClient />
           )}
         </Card.Body>
       </Card>
-
-
-
-
-
-
-
-
-
-
     </div>
   );
 }

@@ -5,41 +5,43 @@ import { Card, Form, Row, Col, Button } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { adminUpdateUser, adminUser } from "@/lib/adminApi";
+import { useLoading } from "../providers/LoadingProvider";
 
 export default function AdminUserEditClient({ userId }: { userId?: string }) {
-  const toast = useToast();
   const router = useRouter();
+  const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
 
-  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"USER"|"APPROVER"|"ADMIN">("USER");
   const [startDate, setStartDate] = useState("");
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState<number>(5);
-  const [saving, setSaving] = useState(false);
+
+  async function load() {
+    showLoading();
+    try {
+      if(userId) {
+        const res = await adminUser(userId);
+        setName(res.name ?? "");
+        setEmail(res.email ?? "");
+        setRole(res.role ?? "USER");
+        setStartDate(res.profile?.startDate ? String(res.profile.startDate).slice(0,10) : "");
+        setWorkDaysPerWeek(res.profile?.workDaysPerWeek ?? 5);
+      }
+    } catch (e:any) {
+      toast.error(`${e?.message || "読み込みに失敗"}`);
+    } finally {
+      hideLoading();
+    }
+  }
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        if(userId) {
-          const res = await adminUser(userId);
-          setName(res.name ?? "");
-          setEmail(res.email ?? "");
-          setRole(res.role ?? "USER");
-          setStartDate(res.profile?.startDate ? String(res.profile.startDate).slice(0,10) : "");
-          setWorkDaysPerWeek(res.profile?.workDaysPerWeek ?? 5);
-        }
-      } catch (e:any) {
-        toast.error(`${e?.message || "読み込みに失敗"}`);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    load();
   }, [userId]);
 
   async function save() {
-    setSaving(true);
+    showLoading();
     try {
       const res = await adminUpdateUser({
         userId: userId ? userId : null, name, email, role, startDate, workDaysPerWeek
@@ -50,14 +52,8 @@ export default function AdminUserEditClient({ userId }: { userId?: string }) {
     } catch (e:any) {
       toast.error(`${e?.message || "エラー"}`);
     } finally {
-      setSaving(false);
+      hideLoading();
     }
-  }
-
-  if (loading) {
-    return (
-      <div>読み込み中</div>
-    )
   }
 
   return (
@@ -122,7 +118,7 @@ export default function AdminUserEditClient({ userId }: { userId?: string }) {
 
         <div className="sticky-actions d-flex gap-2 justify-content-between px-3 pb-2">
           <Button variant="secondary" onClick={()=>history.back()}>戻る</Button>
-          <Button variant="primary" onClick={save} disabled={saving || !email || !name}>保存</Button>
+          <Button variant="primary" onClick={save} disabled={!email || !name || !startDate}>保存</Button>
         </div>
       </Card>
     </div>

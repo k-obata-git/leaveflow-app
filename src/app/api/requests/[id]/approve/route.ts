@@ -9,7 +9,7 @@ async function notifyRequesterApproved(requestId: string, title: string, request
   try {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const { sendPush, ensureConfigured } = await import("@/lib/push");
+    const { sendPush, ensureConfigured } = await import("@/lib/requests/push");
     ensureConfigured?.();
     const subs = await prisma.pushSubscription.findMany({ where: { userId: requesterId } });
     await Promise.all(

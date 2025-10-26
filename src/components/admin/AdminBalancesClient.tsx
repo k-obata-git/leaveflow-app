@@ -6,6 +6,7 @@ import { adminBalances, adminGrantAuto } from "@/lib/adminApi";
 import { useToast } from "@/components/providers/ToastProvider";
 import GrantHistoryModal from "@/components/admin/GrantHistoryModal";
 import GrantModal from "@/components/admin/GrantModal";
+import { useLoading } from "../providers/LoadingProvider";
 
 type BalanceRow = {
   userId: string;
@@ -19,8 +20,8 @@ type BalanceRow = {
 
 export default function AdminBalancesClient() {
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [rows, setRows] = useState<BalanceRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [histOpen, setHistOpen] = useState(false);
   const [histUserId, setHistUserId] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export default function AdminBalancesClient() {
   const [showGrant, setShowGrant] = useState(false);
 
   async function load() {
-    setLoading(true);
+    showLoading();
     try {
       const res = await adminBalances();
       setRows(res);
@@ -37,7 +38,7 @@ export default function AdminBalancesClient() {
       toast.error(`${e?.message || "残高取得に失敗"}`);
     } finally {
       setSelected([]);
-      setLoading(false);
+      hideLoading();
     }
   }
 
@@ -109,7 +110,7 @@ export default function AdminBalancesClient() {
             </tr>
           </thead>
           <tbody>
-            {!loading && filtered.map(b => (
+            {filtered?.map(b => (
               <tr key={b.userId}>
                 <td><Form.Check type="checkbox" checked={selected.includes(b.userId)} onChange={(e)=>toggle(b.userId, e.currentTarget.checked)} /></td>
                 <td>{b.userName || "-"}</td>
@@ -124,12 +125,7 @@ export default function AdminBalancesClient() {
                 </td>
               </tr>
             ))}
-            {loading && (
-              <tr>
-                <td colSpan={6} className="text-center text-muted">読み込み中</td>
-              </tr>
-            )}
-            {!loading && filtered.length === 0 && (
+            {filtered?.length === 0 && (
               <tr>
                 <td colSpan={6} className="text-center text-muted">該当なし</td>
               </tr>
@@ -140,10 +136,8 @@ export default function AdminBalancesClient() {
 
       {/* モバイル: カード */}
       <div className="cards-mobile" key={"cards-mobile"}>
-        {!loading && (
-          <Form.Check type="checkbox" label="すべて選択" id="cards-mobile" onChange={(e)=>toggleAll(e.currentTarget.checked)} />
-        )}
-        {!loading && filtered.map(b => (
+        <Form.Check type="checkbox" label="すべて選択" id="cards-mobile" onChange={(e)=>toggleAll(e.currentTarget.checked)} />
+        {filtered?.map(b => (
           <div key={b.userId} className="card p-3">
             <div className="d-flex align-items-start mb-1">
               <Form.Check type="checkbox" checked={selected.includes(b.userId)} onChange={(e)=>toggle(b.userId, e.currentTarget.checked)} />
@@ -159,10 +153,7 @@ export default function AdminBalancesClient() {
           </div>
         ))}
 
-        {loading && (
-          <div className="text-center text-muted py-2">読み込み中</div>
-        )}
-        {!loading && filtered.length === 0 && (
+        {filtered?.length === 0 && (
           <div className="text-center text-muted py-2">該当なし</div>
         )}
       </div>

@@ -12,14 +12,14 @@ import { getRequestUnitItem } from "@/lib/requests/unit";
 import RequestSwitchButton from "@/components/requests/RequestSwitchButton";
 import ApprovalHistory from "@/components/requests/ApprovalHistory";
 import ActivityLog from "@/components/requests/ActivityLog";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 export default function RequestDetailClient({ requestId }: { requestId: string }) {
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const router = useRouter();
   const commonStore: CommonStore = useCommonStore();
   const requestStore: RequestStore = useRequestStore();
-
-  const [loading, setLoading] = useState(true);
 
   // 承認/差戻モーダル
   const [modalOpen, setModalOpen] = useState(false);
@@ -27,28 +27,32 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
   const [comment, setComment] = useState("");
 
   const load = async() => {
-    setLoading(true);
+    showLoading();
     commonStore.reset();
     requestStore.reset();
 
-    const res = await fetch(`/api/requests/${requestId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      cache: "no-store",
-    });
+    try {
+      const res = await fetch(`/api/requests/${requestId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        cache: "no-store",
+      });
 
-    const responseJson = await res.json();
-    if (responseJson.ok) {
-      requestStore.setRequestData(responseJson.data);
-      requestStore.setCanApproveReject(responseJson.data.canApproveReject);
-      requestStore.setCanResubmit(responseJson.data.canResubmit);
-      requestStore.setIsDraft(responseJson.data.isDraft);
-      setLoading(false)
-    } else {
-      setLoading(false)
-      console.error(responseJson);
+      const responseJson = await res.json();
+      if (responseJson.ok) {
+        requestStore.setRequestData(responseJson.data);
+        requestStore.setCanApproveReject(responseJson.data.canApproveReject);
+        requestStore.setCanResubmit(responseJson.data.canResubmit);
+        requestStore.setIsDraft(responseJson.data.isDraft);
+      } else {
+        console.error(responseJson);
+      }
+    } catch (e: any) {
+      toast.error(`${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -58,8 +62,9 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
   }, [requestId]);
 
   async function doApproveReject() {
-    const path = modalAction === "approve" ? `/api/requests/${requestId}/approve` : `/api/requests/${requestId}/reject`;
+    showLoading();
     try {
+      const path = modalAction === "approve" ? `/api/requests/${requestId}/approve` : `/api/requests/${requestId}/reject`;
       const res = await fetch(path, {
         method: "PUT",
         headers: {
@@ -80,6 +85,8 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
       }
     } catch (e: any) {
       toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
     }
   }
 
@@ -102,11 +109,6 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
     ];
   }, [requestStore, requestId]);
 
-  if (loading) {
-    return (
-      <div className="text-center py-4">読み込み中</div>
-    )
-  }
   if (!requestStore) {
     return (
       <div className="text-center py-4">Not found</div>

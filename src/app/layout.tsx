@@ -13,6 +13,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import SignInCard from "@/components/login/SignInCard";
 import SubscribePushButton from "@/components/SubscribePushButton";
 import SignInOutButton from "@/components/login/SignInOutButton";
+import { LoadingProvider } from "@/components/providers/LoadingProvider";
 
 export const metadata = {
   title: "LeaveFlow",
@@ -28,31 +29,33 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <Providers>
           <ClientProviders>
-            {session?.user &&
-              <>
-                <Navbar bg="light" expand="md" className="shadow-sm" sticky="top">
-                  <Container fluid>
-                    <NavbarBrand href="/">有給ワークフロー</NavbarBrand>
-                      <Nav className="ms-auto align-items-center">
-                        <SignInOutButton />
-                      </Nav>
-                  </Container>
-                </Navbar>
-                <div className="app-layout d-flex">
-                  {/* 左サイドナビ（md以上で表示） */}
-                  <SideNav user={user} />
-                  {/* メインコンテンツ */}
-                  <div className="flex-grow-1 p-3" style={{marginBottom: "64px"}}>
-                    {children}
+            <LoadingProvider>
+              {session?.user &&
+                <>
+                  <Navbar bg="light" expand="md" className="shadow-sm" sticky="top">
+                    <Container fluid>
+                      <NavbarBrand href="/">有給ワークフロー</NavbarBrand>
+                        <Nav className="ms-auto align-items-center">
+                          <SignInOutButton />
+                        </Nav>
+                    </Container>
+                  </Navbar>
+                  <div className="app-layout d-flex">
+                    {/* 左サイドナビ（md以上で表示） */}
+                    <SideNav user={user} />
+                    {/* メインコンテンツ */}
+                    <div className="flex-grow-1 p-3" style={{marginBottom: "64px"}}>
+                      {children}
+                    </div>
                   </div>
-                </div>
-                {/* モバイル専用ボトムナビ */}
-                <MobileBottomNav user={user} />
-              </>
-            }
-            {!session?.user && 
-              <SignInCard />
-            }
+                  {/* モバイル専用ボトムナビ */}
+                  <MobileBottomNav user={user} />
+                </>
+              }
+              {!session?.user && 
+                <SignInCard />
+              }
+            </LoadingProvider>
           </ClientProviders>
         </Providers>
       </body>

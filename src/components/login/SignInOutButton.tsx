@@ -8,5 +8,7 @@ export default function SignInOutButton() {
   if (session) {
     return <Button size="sm" variant="outline-secondary" onClick={() => signOut()}>サインアウト</Button>;
   }
-  return <Button size="sm" onClick={() => signIn()}>サインイン</Button>;
+  // return (
+  //   <Button size="sm" onClick={() => signIn()}>サインイン</Button>
+  // )
 }

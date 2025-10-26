@@ -10,15 +10,16 @@ import useRequestStore, { RequestStore } from "@/store/requestUseStore";
 import useApproverStore, { ApproverStore } from "@/store/approverUseStore";
 import RequestEdit from "@/components/requests/RequestEdit";
 import ApproverPicker from "@/components/requests/ApproverPicker";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 export default function RequestClient({ requestId }: { requestId?: string }) {
   const router = useRouter();
   const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const requestStore: RequestStore = useRequestStore();
   const approverStore: ApproverStore = useApproverStore();
 
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(true);
 
   // 送信モーダル（再申請のコメント任意）
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -37,44 +38,42 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
     step === 2 && requestStore.selectedApprovers.length === 0
   );
 
+  const load = async() => {
+    requestStore.reset();
+    if(!requestId) {
+      return;
+    }
+
+    showLoading();
+    try {
+      const res = await fetch(`/api/requests/${requestId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        cache: "no-store",
+      });
+
+      const responseJson = await res.json();
+      if (responseJson.ok) {
+        requestStore.setRequestData(responseJson.data);
+        requestStore.setCanApproveReject(responseJson.data.canApproveReject);
+        requestStore.setCanResubmit(responseJson.data.canResubmit);
+        requestStore.setIsDraft(responseJson.data.isDraft);
+        requestStore.setSelectedApprovers((approverStore.approvers.filter((a) => responseJson.data.approverIds.includes(a.id)) || []));
+      } else {
+        console.error(responseJson);
+      }
+    } catch (e: any) {
+      toast.error(`読み込みに失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
+    }
+  }
+
   // 初期ロード
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      requestStore.reset();
-
-      if(!requestId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/requests/${requestId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          cache: "no-store",
-        });
-
-        const responseJson = await res.json();
-        if (responseJson.ok) {
-          requestStore.setRequestData(responseJson.data);
-          requestStore.setCanApproveReject(responseJson.data.canApproveReject);
-          requestStore.setCanResubmit(responseJson.data.canResubmit);
-          requestStore.setIsDraft(responseJson.data.isDraft);
-          requestStore.setSelectedApprovers((approverStore.approvers.filter((a) => responseJson.data.approverIds.includes(a.id)) || []));
-          setLoading(false)
-        } else {
-          setLoading(false)
-          console.error(responseJson);
-        }
-      } catch (e: any) {
-        toast.error(`読み込みに失敗しました：${e?.message || "エラー"}`);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    load();
   }, [requestId]);
 
   // バリデーション
@@ -98,6 +97,7 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
   // draft: 下書き保存の場合、true
   // resubmit: 再申請の場合、true
   async function submit(draft = false, resubmit = false) {
+    showLoading();
     try {
       const url = requestId ? `/api/requests/${requestId}` : `/api/requests`;
       const method = requestId ? "PUT" : "POST";
@@ -143,13 +143,9 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
     } catch (e: any) {
       console.error(e);
       toast.error(`失敗しました: ${e?.error || "エラー"}`);
+    } finally {
+      hideLoading();
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center py-4">読み込み中</div>
-    )
   }
 
   return (

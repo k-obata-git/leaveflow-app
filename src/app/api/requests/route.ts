@@ -12,7 +12,7 @@ async function notifyApprovers(approverIds: string[], title: string, requesterNa
     // 動的import（存在しない場合もcatchで握りつぶす）
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const { sendPush, ensureConfigured } = await import("@/lib/push");
+    const { sendPush, ensureConfigured } = await import("@/lib/requests/push");
     ensureConfigured?.();
     const subs = await prisma.pushSubscription.findMany({
       where: { userId: { in: approverIds } },

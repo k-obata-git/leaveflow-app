@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { getRequestActionItem, RequestActionKey, requestActions } from "@/lib/requests/requestAction";
 import { adminAuditList } from "@/lib/adminApi";
+import { useLoading } from "../providers/LoadingProvider";
 
 type Row = {
   id: string;
@@ -17,16 +18,16 @@ type Row = {
 };
 
 export default function AdminAuditClient() {
-  const toast = useToast();
   const router = useRouter();
+  const toast = useToast();
+  const { showLoading, hideLoading } = useLoading();
   const [rows, setRows] = useState<Row[] | null>(null);
-  const [loading, setLoading] = useState(true);
   const [action, setAction] = useState("");
   const [userId, setUserId] = useState("");
   const [requestId, setRequestId] = useState("");
 
   async function load() {
-    setLoading(true);
+    showLoading();
     try {
       const p = new URLSearchParams();
       if (action) {
@@ -45,7 +46,7 @@ export default function AdminAuditClient() {
       setRows([]);
       toast.error(`${e?.message || "ログ情報取得に失敗"}`);
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }
 
@@ -90,12 +91,7 @@ export default function AdminAuditClient() {
             </tr>
           </thead>
           <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={6} className="text-center text-muted">読み込み中</td>
-              </tr>
-            )}
-            {!loading && rows && rows.map(l => (
+            {rows?.map(l => (
               <tr key={l.id}>
                 <td>{new Date(l.createdAt).toLocaleString()}</td>
                 <td>
@@ -108,7 +104,7 @@ export default function AdminAuditClient() {
                 <td className="text-break">{l.comment || "-"}</td>
               </tr>
             ))}
-            {!loading && (!rows || rows.length===0) && (
+            {!rows || rows.length===0 && (
               <tr>
                 <td colSpan={5} className="text-center text-muted">ログはありません</td>
               </tr>
@@ -118,10 +114,7 @@ export default function AdminAuditClient() {
       </div>
 
       <div className="cards-mobile">
-        {loading && (
-          <div className="text-center text-muted py-2">読み込み中</div>
-        )}
-        {!loading && rows && rows.map(l => (
+        {rows?.map(l => (
           <div key={l.id} className="card p-3">
             <div className="d-flex justify-content-between align-items-start mb-1">
               <span className={`badge text-bg-${getRequestActionItem(l.action)?.color}`}>{getRequestActionItem(l.action)?.label}</span>
@@ -134,7 +127,7 @@ export default function AdminAuditClient() {
             }
           </div>
         ))}
-        {!loading && (!rows || rows.length===0) && (
+        {!rows || rows.length===0 && (
           <div className="text-center text-muted py-2">ログはありません</div>
         )}
       </div>
