@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  APPROVER
+  ADMIN
+}
+
+enum RequestUnit {
+  FULL_DAY
+  HALF_DAY
+  HOURLY
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DRAFT
+}
+
+enum AuditAction {
+  CREATE // 申請レコード作成（API POST時の実体作成）
+  SUBMIT // 送信（承認フロー開始）
+  DRAFT_SAVE // 下書き保存
+  RESUBMIT // 差戻後の再申請
+  UPDATE // 内容編集（承認フロー非開始の通常更新に使う場合）
+  APPROVE // 承認
+  REJECT // 差戻
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+
+  profile           EmployeeProfile?
+  accounts          Account[]
+  sessions          Session[]
+  subscriptions     PushSubscription[]
+  leaveRequests     LeaveRequest[]     @relation("Requester")
+  approvals         ApprovalStep[]     @relation("Approver")
+  leaveBalances     LeaveBalance[]
+  leaveTransactions LeaveTransaction[]
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  AuditLog  AuditLog[]
+}
+
+model EmployeeProfile {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String   @unique
+  startDate       DateTime
+  workDaysPerWeek Int // 1..5 typical
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LeaveBalance {
+  id            String    @id @default(cuid())
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  currentDays   Decimal   @db.Decimal(6, 2)
+  lastGrantDate DateTime?
+  nextGrantDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model LeaveRequest {
+  id          String         @id @default(cuid())
+  requester   User           @relation("Requester", fields: [requesterId], references: [id])
+  requesterId String
+  title       String
+  reason      String?
+  unit        RequestUnit
+  startDate   DateTime
+  endDate     DateTime
+  hours       Int? // for HOURLY unit; if provided
+  minutes     Int? // optional extra precision
+  status      ApprovalStatus @default(PENDING)
+
+  steps ApprovalStep[]
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  AuditLog  AuditLog[]
+
+  @@index([requesterId])
+  @@index([status])
+}
+
+model ApprovalStep {
+  id         String         @id @default(cuid())
+  request    LeaveRequest   @relation(fields: [requestId], references: [id])
+  requestId  String
+  approver   User           @relation("Approver", fields: [approverId], references: [id])
+  approverId String
+  order      Int
+  status     ApprovalStatus @default(PENDING)
+  comment    String?
+  decidedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requestId, approverId])
+  @@index([approverId, status])
+}
+
+enum TransactionType {
+  GRANT
+  CONSUME
+  ADJUST
+}
+
+model LeaveTransaction {
+  id               String          @id @default(cuid())
+  user             User            @relation(fields: [userId], references: [id])
+  userId           String
+  type             TransactionType
+  amountDays       Decimal         @db.Decimal(6, 2) // negative for CONSUME
+  relatedRequestId String?
+  note             String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  requestId String
+  actorId   String
+  action    AuditAction
+  comment   String? // 任意コメント（承認/差戻時など）
+  meta      Json? // 追加情報（差分や端末などを将来保存したい場合）
+  createdAt DateTime    @default(now())
+
+  request LeaveRequest @relation(fields: [requestId], references: [id])
+  actor   User         @relation(fields: [actorId], references: [id])
+
+  @@index([requestId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
+// --- NextAuth models ---
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
