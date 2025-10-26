@@ -51,6 +51,7 @@ export default function AdminBalancesClient() {
   );
 
   async function doAutoGrant() {
+    showLoading();
     try {
       await adminGrantAuto({ userIds: selected });
       setSelected([]);
@@ -58,6 +59,8 @@ export default function AdminBalancesClient() {
       toast.success("自動付与しました");
     } catch (e:any) {
       toast.error(`${e?.message || "自動付与に失敗"}`);
+    } finally {
+      hideLoading();
     }
   }
 
