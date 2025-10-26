@@ -1,0 +1,73 @@
+/* ミニマルサイドナビ（アイコン＋ラベル縦積み） */
+.sidenav-mini {
+  width: 80px; /* 少しだけ広げる */
+  min-height: calc(100vh - 40px - 1rem);
+  background: var(--bs-light);
+}
+
+.snav-mini-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--bs-body-color);
+  padding: .5rem .25rem;
+  border-radius: .5rem;
+  font-size: .8rem;
+}
+
+.snav-mini-link .icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.snav-mini-link .label {
+  font-size: .7rem;
+  margin-top: 2px;
+}
+
+.snav-mini-link.active {
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+
+/* モバイルボトムナビ */
+.mobile-bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  background: var(--bs-body-bg); border-top: 1px solid rgba(0,0,0,.1);
+  padding: .25rem .5rem; z-index: 1040;
+}
+.mobile-bottom-nav .item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: .35rem .25rem; text-decoration: none; color: inherit;
+}
+.mnav-ico { font-size: 1.3rem; line-height: 1; margin-bottom: 2px; }
+.mobile-bottom-nav .item.active {
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+@media (max-width: 576px) {
+  main, .flex-grow-1 { padding-bottom: 64px; } /* 下ナビ分の余白 */
+}
+
+@media (max-width: 991px) {
+  .mobile-bottom-nav {
+    display: grid;
+  }
+  .sidenav-mini {
+    display: none;
+  }
+}
+@media (min-width: 992px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+  .sidenav-mini {
+    display: flex;
+  }
+}

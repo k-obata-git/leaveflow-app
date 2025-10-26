@@ -1,0 +1,270 @@
+:root {
+  --brand-color: #324d8c;
+}
+
+html {
+
+}
+body {
+  background-color: #f8f9fa;
+}
+.step-indicator {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+.step-indicator .dot {
+  width: 10px; height: 10px; border-radius: 50%; background: #dee2e6;
+}
+.step-indicator .dot.active {
+  background: #0d6efd;
+}
+
+
+/* ===== Mobile-first helpers ===== */
+
+/* タブ（Nav）を横スクロール可能に */
+.nav-scroll {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: .5rem;
+  -webkit-overflow-scrolling: touch;
+}
+.nav-scroll .nav-link {
+  flex: 0 0 auto;
+}
+
+/* 下部の操作バーを固定（スマホ） */
+@media (max-width: 991px) {
+  .sticky-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1030;
+    background: var(--bs-body-bg);
+    padding: .75rem .5rem;
+    border-top: 1px solid rgba(0,0,0,.05);
+  }
+  .sticky-actions .btn { width: 48%; }
+}
+
+/* テーブル→カード切替（スマホでカードリストに） */
+@media (max-width: 991px) {
+  .table-desktop { display: none !important; }
+  .cards-mobile { display: grid !important; gap: .5rem; }
+}
+@media (min-width: 992px) {
+  .table-desktop { display: block !important; }
+  .cards-mobile { display: none !important; }
+}
+
+
+/* Approval history: mobile cards */
+@media (max-width: 991px) {
+  .approval-cards { display: grid; gap: .75rem; }
+  .approval-table { display: none !important; }
+}
+@media (min-width: 992px) {
+  .approval-cards { display: none !important; }
+  .approval-table { display: block !important; }
+}
+
+/* 小さな丸アイコン（イニシャル） */
+.avatar-initials {
+  width: 36px; height: 36px;
+  border-radius: 9999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  background: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+}
+
+/* ステータスごとのバッジ色（コメント見やすく） */
+.badge-APPROVED { background-color: var(--bs-success); }
+.badge-REJECTED { background-color: var(--bs-danger); }
+.badge-PENDING  { background-color: var(--bs-secondary); }
+.badge-DRAFT    { background-color: var(--bs-secondary); opacity: .7; }
+
+/* Key-Value grid for overview (スマホ最適) */
+.kv-grid { display: grid; gap: .5rem 1rem; grid-template-columns: 120px 1fr; }
+.kv-row { display: contents; }
+.kv-key { color: var(--bs-secondary-color); }
+.kv-val { word-break: break-word; }
+@media (max-width: 576px) { .kv-grid { grid-template-columns: 96px 1fr; } }
+
+/* 申請画面 spte表示 */
+.stepper {
+  display: grid;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+.stepper .track {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 25%;
+  height: 5px;
+  background: #eef9;
+  z-index: 0;
+}
+.stepper .step {
+  display: grid;
+  justify-items: center;
+  z-index: 1;
+}
+.step .dot {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: white;
+  border: 2px solid #e9eef9;
+  transition: all 0.5s ease;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+.step.active .dot {
+  border-color: var(--brand-color);
+  background: var(--brand-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(50, 77, 140, 0.25);
+  font-weight: bold;
+}
+.step.done .dot {
+  border-color: var(--brand-color);
+  background: white;
+  color: var(--bs-success);
+}
+.step .label {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.step.active .label {
+  color: var(--brand-color);
+  font-weight: bold;
+}
+.progress-track {
+  position: relative;
+  background: transparent;
+}
+.progress-track .bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brand-color), #556eb6);
+  border-radius: 10px;
+  transition: width 0.35s ease;
+  box-shadow: 0 2px 6px rgba(50, 77, 140, 0.25);
+}
+
+/* 承認者選択 */
+.picker-card {
+  background: #fff;
+  border: 1px solid #ebeff7;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(50, 77, 140, 0.08);
+}
+.search-row {
+  gap: 0.5rem;
+}
+.search-row .input-group > .form-control {
+  padding: 0.4rem 0.6rem;
+}
+.search-row .input-group > .input-group-text {
+  padding: 0.4rem 0.55rem;
+}
+.quick-badge {
+  font-size: 0.75rem;
+  background: #f1f4ff;
+  color: #2b3c6a;
+  border: 1px solid #e1e6ff;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  cursor: pointer;
+}
+.quick-badge:hover {
+  background: #e8edff;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #eef2ff;
+  border: 1px solid #dfe6ff;
+  color: #2b3c6a;
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1;
+}
+.chip .x {
+  color: #6b7280;
+  cursor: pointer;
+}
+.chip .x:hover {
+  color: #3f495f;
+}
+.result-item {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.result-item:hover {
+  background: #f6f8ff;
+}
+.result-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #e6ecff;
+  font-size: 0.72rem;
+  color: #2b3c6a;
+  flex: 0 0 auto;
+}
+.name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.btn-brand {
+  background: var(--brand-color);
+  border-color: var(--brand-color);
+}
+.btn-brand:hover {
+  background: #2b4178;
+  border-color: #2b4178;
+}
+.countbar {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+.order-preview {
+  font-size: 0.82rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: auto;
+}
