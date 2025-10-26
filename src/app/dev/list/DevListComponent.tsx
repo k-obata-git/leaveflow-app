@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Table, Button, Form, Row, Col, InputGroup, Card } from "react-bootstrap";
 import { getRequestStatusItem } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, requestUnit, UnitKey } from "@/lib/requests/unit";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 export default function DevListComponent() {
+  const { showLoading, hideLoading } = useLoading();
   const [edittingData, setEdittingData] = useState<any | null>(null);
   const [rows, setRows] = useState([]);
 
@@ -17,20 +19,27 @@ export default function DevListComponent() {
   }, []);
 
   const load = async() => {
+    showLoading();
     setRows([]);
     setEdittingData(null);
-    const res = await fetch(`/api/dev`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      },
-    });
+    try {
+      const res = await fetch(`/api/dev`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      });
 
-    const responseJson = await res.json();
-    if (res.ok) {
-      setRows(responseJson.data);
-    } else {
-      console.error(responseJson);
+      const responseJson = await res.json();
+      if (res.ok) {
+        setRows(responseJson.data);
+      } else {
+        console.error(responseJson);
+      }
+    } catch (e:any) {
+
+    } finally {
+      hideLoading();
     }
   }
 
@@ -40,36 +49,43 @@ export default function DevListComponent() {
       return;
     }
 
-    const res = await fetch(`/api/dev`, {
-      method: action === "deleted" ? "DELETE" : "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        requestId: id,
-        action: action,
-        title: edittingData?.title,
-        reason: edittingData?.reason,
-        unit: edittingData?.unit,
-        startDate: edittingData?.startDate,
-        endDate: edittingData?.endDate,
-        hours: edittingData?.hours,
-      }),
-    });
+    showLoading();
+    try {
+      const res = await fetch(`/api/dev`, {
+        method: action === "deleted" ? "DELETE" : "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          requestId: id,
+          action: action,
+          title: edittingData?.title,
+          reason: edittingData?.reason,
+          unit: edittingData?.unit,
+          startDate: edittingData?.startDate,
+          endDate: edittingData?.endDate,
+          hours: edittingData?.hours,
+        }),
+      });
 
-    if(action === "deleted") {
-      if (res.ok) {
-        await load();
-        setEdittingData(null);
-      }
-    } else {
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        await load();
-        setEdittingData(null);
+      if(action === "deleted") {
+        if (res.ok) {
+          await load();
+          setEdittingData(null);
+        }
       } else {
-        console.error(responseJson);
+        const responseJson = await res.json();
+        if (responseJson.ok) {
+          await load();
+          setEdittingData(null);
+        } else {
+          console.error(responseJson);
+        }
       }
+    } catch (e:any) {
+
+    } finally {
+      hideLoading();
     }
   }
 

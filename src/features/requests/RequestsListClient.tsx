@@ -63,6 +63,7 @@ export default function RequestsListClient({
   // データ取得
   const load = async() => {
     showLoading();
+    setRows([]);
     try {
       const res = await fetch(`/api/requests/list?${query}`, {
         method: "GET",
