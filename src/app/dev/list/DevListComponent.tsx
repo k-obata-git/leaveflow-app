@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Table, Button, Form, Row, Col, InputGroup, Card } from "react-bootstrap";
+import { Table, Button, Form, Row, Col, InputGroup, Card, Badge } from "react-bootstrap";
 import { getRequestStatusItem } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, requestUnit, UnitKey } from "@/lib/requests/unit";
 import { useLoading } from "@/components/providers/LoadingProvider";
@@ -115,7 +115,9 @@ export default function DevListComponent() {
                 <td className="text-start" style={{width: "20rem"}}>
                   <p className="text-truncate" style={{width: "20rem"}}>{r.title}</p>
                 </td>
-                <td style={{width: "10%"}}>{getRequestStatusItem(r.status)?.label}</td>
+                <td style={{width: "10%"}}>
+                  <Badge className="mt-2" bg={getRequestStatusItem(r.status)?.color}>{getRequestStatusItem(r.status)?.label}</Badge>
+                </td>
                 <td style={{width: "10%"}}>{getRequestUnitItem(r.unit)?.label}</td>
                 <td style={{width: "20%"}}>{new Date(r.startDate).toLocaleDateString()} 〜{" "}{new Date(r.endDate).toLocaleDateString()}</td>
                 <td className="text-start" style={{width: "25%"}}>{r.requester.name}</td>
