@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Table, Button, InputGroup, Form, Row, Col, } from "react-bootstrap";
+import { Table, Button, InputGroup, Form, Row, Col, Badge, } from "react-bootstrap";
 import { adminBalances, adminGrantAuto } from "@/lib/adminApi";
 import { useToast } from "@/components/providers/ToastProvider";
 import GrantHistoryModal from "@/components/admin/GrantHistoryModal";
@@ -137,22 +137,34 @@ export default function AdminBalancesClient() {
         </Table>
       </div>
 
-      {/* モバイル: カード */}
+      {/* モバイル：カード */}
       <div className="cards-mobile" key={"cards-mobile"}>
         <Form.Check type="checkbox" label="すべて選択" id="cards-mobile" onChange={(e)=>toggleAll(e.currentTarget.checked)} />
         {filtered?.map(b => (
           <div key={b.userId} className="card p-3">
-            <div className="d-flex align-items-start mb-1">
-              <Form.Check type="checkbox" checked={selected.includes(b.userId)} onChange={(e)=>toggle(b.userId, e.currentTarget.checked)} />
-              <div className="fw-bold ps-2">{b.userName || "(無名)"}</div>
+            <div className="d-flex flex-wrap">
+              <div className="me-auto">
+                <Form.Check type="checkbox" checked={selected.includes(b.userId)} onChange={(e)=>toggle(b.userId, e.currentTarget.checked)} />
+              </div>
+              <div>
+                <Badge bg="secondary">{b.currentDays ? `${b.currentDays} 日` : ""}</Badge>
+              </div>
             </div>
-            <div className="d-flex justify-content-end align-items-start mb-1">
-              <span className="badge text-bg-secondary">{b.currentDays ? `${b.currentDays} 日` : ""}</span>
-            </div>
+            <div className="fw-bold text-truncate mt-2 mb-2">{b.userName}</div>
             <div className="small text-muted mb-1">{b.email || "-"}</div>
-            <div className="small">最終付与: {b.lastGrantDate ? new Date(b.lastGrantDate).toLocaleDateString() : "-"}</div>
-            <div className="small mb-2">次回付与: {b.nextGrantDate ? new Date(b.nextGrantDate).toLocaleDateString() : "-"}</div>
-            <Button variant="outline-secondary" size="sm" onClick={()=>openHistory(b)}>履歴</Button>
+            <div className="small text-muted mb-1">
+              <span className="me-1">最終付与:</span>
+              <span>{b.lastGrantDate ? new Date(b.lastGrantDate).toLocaleDateString() : "-"}</span>
+            </div>
+            <div className="small text-muted">
+              <span className="me-1">次回付与:</span>
+              <span>{b.nextGrantDate ? new Date(b.nextGrantDate).toLocaleDateString() : "-"}</span>
+            </div>
+            <div className="d-flex mt-2 mt-3">
+              <div className="flex-fill d-grid">
+                <Button variant="outline-secondary" size="sm" onClick={()=>openHistory(b)}>履歴</Button>
+              </div>
+            </div>
           </div>
         ))}
 

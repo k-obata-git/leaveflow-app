@@ -177,7 +177,7 @@ export default function RequestsListClient({
         </Nav.Item>
       </Nav>
 
-      {/* 一覧（デスクトップ向けテーブル） */}
+      {/* デスクトップ：テーブル */}
       <div className="table-desktop">
         <Table striped hover responsive="sm">
           <thead>
@@ -227,7 +227,6 @@ export default function RequestsListClient({
                 )}
               </tr>
             ))}
-
             {rows.length === 0 && (
               <tr>
                 <td colSpan={tab === "approver-pending" ? 7 : 5} className="text-center text-muted">
@@ -239,38 +238,41 @@ export default function RequestsListClient({
         </Table>
       </div>
 
-      {/* 一覧（モバイル向けカード） */}
+      {/* モバイル：カード */}
       <div className="cards-mobile">
-        {rows.map((r) => (
-          <div key={r.id} className="card p-3">
+        {rows.map((row) => (
+          <div key={row.id} className="card p-3">
             <div className="d-flex flex-wrap">
-              <div className="me-auto"></div>
+              <div className="me-auto">
+                <Badge bg="light" text="dark">{getRequestUnitItem(row.unit)?.label}</Badge>
+              </div>
               <div>
-                <span className={`badge text-bg-${
-                  r.status === "APPROVED" ? "success" : r.status === "REJECTED" ? "danger" : "secondary"
-                }`}>{r.status}</span>
+                <Badge bg={getRequestStatusItem(row.status)?.color}>{getRequestStatusItem(row.status)?.label}</Badge>
               </div>
             </div>
-            <div className="fw-bold text-truncate">{r.title}</div>
+            <div className="fw-bold text-truncate">{row.title}</div>
             <div className="small text-muted mb-1">
-              {new Date(r.startDate).toLocaleDateString()} 〜 {new Date(r.endDate).toLocaleDateString()}
+              {new Date(row.startDate).toLocaleDateString()} 〜 {new Date(row.endDate).toLocaleDateString()}
             </div>
-            <div className="small mb-2">単位: {getRequestUnitItem(r.unit)?.label}{r.requesterName ? ` ／ 申請者: ${r.requesterName}` : ""}</div>
-            <div className="d-flex">
-              <div className="flex-fill d-grid pe-2">
-                <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${r.id}`)}>詳細</Button>
+            <div className="small text-muted">
+              <span className="me-1">申請者:</span>
+              <span>{row.requesterName ? row.requesterName : ""}</span>
+            </div>
+            <div className="d-flex mt-3">
+              <div className="flex-fill d-grid">
+                <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${row.id}`)}>詳細</Button>
               </div>
               {tab === "approver-pending" && (
                 <>
-                  <div className="flex-fill d-grid">
+                  <div className="flex-fill d-grid ps-2 pe-2">
                     <Button variant="success" size="sm"
-                      onClick={() => { setModalAction("approve"); setModalTargetId(r.id); setModalOpen(true); }}>
+                      onClick={() => { setModalAction("approve"); setModalTargetId(row.id); setModalOpen(true); }}>
                       承認
                     </Button>
                   </div>
-                  <div className="flex-fill d-grid ps-2">
+                  <div className="flex-fill d-grid">
                     <Button variant="outline-danger" size="sm"
-                      onClick={() => { setModalAction("reject"); setModalTargetId(r.id); setModalOpen(true); }}>
+                      onClick={() => { setModalAction("reject"); setModalTargetId(row.id); setModalOpen(true); }}>
                       差戻
                     </Button>
                   </div>

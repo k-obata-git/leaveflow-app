@@ -79,6 +79,7 @@ export default function AdminAuditClient() {
         <Button onClick={load}>検索</Button>
       </div>
 
+      {/* デスクトップ：テーブル */}
       <div className="table-desktop">
         <Table striped hover responsive="sm">
           <thead>
@@ -113,18 +114,30 @@ export default function AdminAuditClient() {
         </Table>
       </div>
 
+      {/* モバイル：カード */}
       <div className="cards-mobile">
         {rows?.map(l => (
           <div key={l.id} className="card p-3">
-            <div className="d-flex justify-content-between align-items-start mb-1">
-              <span className={`badge text-bg-${getRequestActionItem(l.action)?.color}`}>{getRequestActionItem(l.action)?.label}</span>
-              <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
+            <div key={l.id} className="card p-3">
+              <div className="d-flex flex-wrap">
+                <div className="me-auto">
+                  <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
+                </div>
+                <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
+              </div>
+              <div className="small text-muted mt-2">
+                <span className="me-1">実行者:</span>
+                <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
+              </div>
+              <div className="small text-muted mt-2">
+                {l.request ? <Button variant="link" className="p-0" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}
+              </div>
+              {l.comment && (
+                <div className="p-2 rounded border bg-body-tertiary mt-3">
+                  <div className="text-break">{l.comment}</div>
+                </div>
+              )}
             </div>
-            <div className="small">実行者: {l.actor?.name || l.actor?.email || l.actor?.id || "-"}</div>
-            <div className="small">申請: {l.request ? <Button variant="link" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}</div>
-            {l.comment &&
-              <div className="small text-break mt-1">{l.comment}</div>
-            }
           </div>
         ))}
         {!rows || rows.length===0 && (

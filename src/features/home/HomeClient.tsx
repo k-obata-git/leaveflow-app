@@ -192,10 +192,9 @@ export default function HomeClient() {
           </ButtonGroup>
         </Card.Header>
         <Card.Body>
-
-
           {tab==="mine" && (
             <>
+              {/* デスクトップ：テーブル */}
               <div className="table-desktop">
                 <Table striped hover responsive="sm" className="mb-0">
                   <thead>
@@ -227,22 +226,25 @@ export default function HomeClient() {
                   </tbody>
                 </Table>
               </div>
+
+              {/* モバイル：カード */}
               <div className="cards-mobile">
                 {recent.map(row =>
                   <div key={row.id} className="card p-3">
                     <div className="d-flex flex-wrap">
-                      <div className="me-auto"></div>
+                      <div className="me-auto">
+                        <Badge bg="light" text="dark">{getRequestUnitItem(row.unit)?.label}</Badge>
+                      </div>
                       <div>
-                        <span className={`badge text-bg-${
-                          row.status === "APPROVED" ? "success" : row.status === "REJECTED" ? "danger" : "secondary"
-                        }`}>{row.status}</span>
+                        <Badge bg={getRequestStatusItem(row.status)?.color}>{getRequestStatusItem(row.status)?.label}</Badge>
                       </div>
                     </div>
                     <div className="fw-bold text-truncate">{row.title}</div>
-                    <div className="small text-muted mb-1">{new Date(row.startDate).toLocaleDateString()} 〜 {new Date(row.endDate).toLocaleDateString()}</div>
-                    <div className="small mb-2">単位: {getRequestUnitItem(row.unit)?.label}</div>
-                    <div className="d-flex">
-                      <div className="flex-fill d-grid pe-2">
+                    <div className="small text-muted">
+                      {new Date(row.startDate).toLocaleDateString()} 〜 {new Date(row.endDate).toLocaleDateString()}
+                    </div>
+                    <div className="d-flex mt-3">
+                      <div className="flex-fill d-grid">
                         <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${row.id}`)}>詳細</Button>
                       </div>
                     </div>
@@ -255,6 +257,7 @@ export default function HomeClient() {
 
           {tab==="approvals" && (
             <>
+              {/* デスクトップ：テーブル */}
               <div className="table-desktop">
                 <Table striped hover responsive="sm" className="mb-0">
                   <thead>
@@ -284,14 +287,26 @@ export default function HomeClient() {
                   </tbody>
                 </Table>
               </div>
+
+              {/* モバイル：カード */}
               <div className="cards-mobile">
                 {pendings.map(row =>
                   <div key={row.id} className="card p-3">
+                    <div className="d-flex flex-wrap">
+                      <div className="me-auto">
+                        <Badge bg="light" text="dark">{getRequestUnitItem(row.unit)?.label}</Badge>
+                      </div>
+                    </div>
                     <div className="fw-bold text-truncate">{row.title}</div>
-                    <div className="small text-muted mb-1">{new Date(row.startDate).toLocaleDateString()} 〜 {new Date(row.endDate).toLocaleDateString()}</div>
-                    <div className="small mb-2">単位: {getRequestUnitItem(row.unit)?.label}</div>
-                    <div className="d-flex">
-                      <div className="flex-fill d-grid pe-2">
+                    <div className="small text-muted mb-1">
+                      {new Date(row.startDate).toLocaleDateString()} 〜 {new Date(row.endDate).toLocaleDateString()}
+                    </div>
+                    <div className="small text-muted">
+                      <span className="me-1">申請者:</span>
+                      <span>{row.requesterName ? row.requesterName : ""}</span>
+                    </div>
+                    <div className="d-flex mt-2 mt-3">
+                      <div className="flex-fill d-grid">
                         <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${row.id}`)}>詳細</Button>
                       </div>
                     </div>

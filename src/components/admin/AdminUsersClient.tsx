@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Table, Button, Form, InputGroup } from "react-bootstrap";
+import { Table, Button, Form, InputGroup, Badge } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { adminUserList } from "@/lib/adminApi";
@@ -101,15 +101,26 @@ export default function AdminUsersClient() {
       <div className="cards-mobile">
         {filtered?.map(u => (
           <div key={u.id} className="card p-3">
-            <div className="d-flex justify-content-between align-items-start mb-1">
-              <div className="fw-bold">{u.name || "(無名)"}</div>
-              <span className="badge text-bg-secondary">{u.role}</span>
+            <div className="d-flex flex-wrap">
+              <div className="me-auto"></div>
+              <div>
+                <Badge bg="secondary">{u.role}</Badge>
+              </div>
             </div>
+            <div className="fw-bold text-truncate mt-2 mb-2">{u.name}</div>
             <div className="small text-muted mb-1">{u.email || "-"}</div>
-            <div className="small">入社日: {u.startDate ? new Date(u.startDate).toLocaleDateString() : "-"}</div>
-            <div className="small mb-2">勤務日数/週: {u.workDaysPerWeek ?? "-"}</div>
-            <div className="d-grid">
-              <Button variant="outline-primary" size="sm" onClick={() => router.push(`/admin/users/${u.id}`)}>編集</Button>
+            <div className="small text-muted mb-1">
+              <span className="me-1">入社日:</span>
+              <span>{u.startDate ? new Date(u.startDate).toLocaleDateString() : "-"}</span>
+            </div>
+            <div className="small text-muted">
+              <span className="me-1">勤務日数/週:</span>
+              <span>{u.workDaysPerWeek ?? "-"}</span>
+            </div>
+            <div className="d-flex mt-2 mt-3">
+              <div className="flex-fill d-grid">
+                <Button variant="outline-primary" size="sm" onClick={() => router.push(`/admin/users/${u.id}`)}>編集</Button>
+              </div>
             </div>
           </div>
         ))}

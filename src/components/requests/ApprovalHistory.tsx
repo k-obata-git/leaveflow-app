@@ -18,7 +18,7 @@ export default function ApprovalHistory() {
 
   return (
     <div>
-      {/* Desktop: table */}
+      {/* デスクトップ：テーブル */}
       <div className="approval-table">
         <Table responsive="sm" hover>
           <thead>
@@ -46,30 +46,28 @@ export default function ApprovalHistory() {
         </Table>
       </div>
 
-      {/* Mobile: cards timeline */}
+      {/* モバイル：カード */}
       <div className="approval-cards">
         {requestStore.requestData.steps.map((s) => (
           <div key={s.id} className="card p-3">
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <div className="avatar-initials">
-                {initials(s.approver?.name)}
+            <div className="d-flex flex-wrap">
+              <div className="me-auto">
+                <div className="avatar-initials">{initials(s.approver?.name)}</div>
               </div>
-              <div className="flex-grow-1">
-                <div className="fw-bold">{s.approver?.name || "不明な承認者"}</div>
-                <div className="small text-muted">順番: {s.order}</div>
+              <div>
+                <Badge bg={getRequestStatusItem(s.status)?.color}>{getRequestStatusItem(s.status)?.label}</Badge>
               </div>
-              <span className={`badge badge-${s.status}`}>
-                {s.status}
-              </span>
             </div>
-
-            <div className="small text-muted mb-2">
+            <div className="fw-bold text-truncate">{s.approver?.name || "不明な承認者"}</div>
+            <div className="small text-muted mb-1">
+              <span className="me-1">順番:</span>
+              <span>{s.order}</span>
+            </div>
+            <div className="small text-muted mt-2">
               {s.decidedAt ? new Date(s.decidedAt).toLocaleString() : "未処理"}
-            </div>
-
+              </div>
             {s.comment && (
-              <div className="p-2 rounded border bg-body-tertiary">
-                <div className="small text-muted mb-1">コメント</div>
+              <div className="p-2 rounded border bg-body-tertiary mt-1">
                 <div className="text-break">{s.comment}</div>
               </div>
             )}

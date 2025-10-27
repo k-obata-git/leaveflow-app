@@ -42,12 +42,21 @@ export default function ActivityLog() {
       <div className="cards-mobile">
         {requestStore.requestData.logs && requestStore.requestData.logs.map(l => (
           <div key={l.id} className="card p-3">
-            <div className="d-flex justify-content-between align-items-start mb-1">
-              <span className={`badge text-bg-${getRequestActionItem(l.action)?.color}`}>{getRequestActionItem(l.action)?.label}</span>
+            <div className="d-flex flex-wrap">
+              <div className="me-auto">
+                <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
+              </div>
               <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
             </div>
-            <div className="small mb-1">実行者: {l.actor?.name || l.actor?.email || l.actor?.id || "-"}</div>
-            {l.comment && <div className="small text-break">{l.comment}</div>}
+            <div className="small text-muted mt-2">
+              <span className="me-1">実行者:</span>
+              <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
+            </div>
+            {l.comment && (
+              <div className="p-2 rounded border bg-body-tertiary mt-3">
+                <div className="text-break">{l.comment}</div>
+              </div>
+            )}
           </div>
         ))}
         {(!requestStore.requestData.logs || requestStore.requestData.logs.length===0) && (
