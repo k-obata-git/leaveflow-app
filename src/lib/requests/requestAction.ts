@@ -1,4 +1,4 @@
-export type RequestActionKey = "SUBMIT" | "DRAFT_SAVE" | "RESUBMIT" | "APPROVE" | "REJECT" | "UPDATE" | "CREATE";
+export type RequestActionKey = "SUBMIT" | "DRAFT_SAVE" | "RESUBMIT" | "APPROVE" | "REJECT" | "UPDATE" | "CREATE" | "WITHDRAW";
 
 interface RequestAction {
   key: RequestActionKey;
@@ -30,7 +30,7 @@ export const requestActions: RequestAction[] = [
   {
     key: "REJECT",
     label: "差戻",
-    color: "danger"
+    color: "warning"
   },
   {
     key: "UPDATE",
@@ -41,6 +41,11 @@ export const requestActions: RequestAction[] = [
     key: "CREATE",
     label: "作成",
     color: "secondary"
+  },
+  {
+    key: "WITHDRAW",
+    label: "取下",
+    color: "danger"
   },
 ]
 

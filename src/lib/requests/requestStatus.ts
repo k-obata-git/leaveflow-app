@@ -1,4 +1,4 @@
-export type RequestStatusKey = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+export type RequestStatusKey = "DRAFT" | "PENDING" | "APPROVED" | "REJECTED" | "WITHDREW";
 
 interface RequestStatus {
   key: RequestStatusKey;
@@ -15,7 +15,7 @@ const requestStatuses: RequestStatus[] = [
   {
     key: "PENDING",
     label: "承認待ち",
-    color: "warning"
+    color: "primary"
   },
   {
     key: "APPROVED",
@@ -25,6 +25,11 @@ const requestStatuses: RequestStatus[] = [
   {
     key: "REJECTED",
     label: "差戻",
+    color: "warning"
+  },
+  {
+    key: "WITHDREW",
+    label: "取下",
     color: "danger"
   },
 ]
