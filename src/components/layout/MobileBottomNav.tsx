@@ -22,23 +22,23 @@ export default function MobileBottomNav({user} : Prors) {
     <nav className={`${user?.role === "ADMIN" ? "mobile-bottom-nav admin" : "mobile-bottom-nav"}`} aria-label="主要ナビゲーション">
       <Link href="/" className={`item ${act("/")}`}>
         <House className="mnav-ico" />
-        <span className="label">ホーム</span>
+        {/* <span className="label">ホーム</span> */}
       </Link>
 
       <Link href="/requests/new" className={`item ${act("/requests/new")}`}>
         <FileEarmarkPlus className="mnav-ico" />
-        <span className="label">新規</span>
+        {/* <span className="label">新規</span> */}
       </Link>
 
       <Link href="/requests" className={`item ${act("/requests")}`}>
         <ListCheck className="mnav-ico" />
-        <span className="label">一覧</span>
+        {/* <span className="label">一覧</span> */}
       </Link>
 
       {user?.role === "ADMIN" && (
         <Link href="/admin" className={`item ${act("/admin")}`}>
           <Gear className="mnav-ico" />
-          <span className="label">管理</span>
+          {/* <span className="label">管理</span> */}
         </Link>
       )}
     </nav>
