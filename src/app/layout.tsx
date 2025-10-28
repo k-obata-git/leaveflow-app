@@ -2,6 +2,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import "./layout.css";
 import Link from "next/link";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { ReactNode } from "react";
 import { Container, Navbar, Nav, NavbarToggle, NavbarCollapse, NavbarBrand, } from "react-bootstrap";
 import { getServerSession } from "next-auth";
@@ -46,6 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                     {/* メインコンテンツ */}
                     <div className="flex-grow-1 p-3" style={{marginBottom: "64px"}}>
                       {children}
+                      <SpeedInsights/>
                     </div>
                   </div>
                   {/* モバイル専用ボトムナビ */}
