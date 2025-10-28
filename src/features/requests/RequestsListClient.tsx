@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Table, Badge, Nav, Modal, Button, Form } from "react-bootstrap";
+import { Table, Badge, Nav, Button, Form } from "react-bootstrap";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { getRequestStatusItem, RequestStatusKey } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, UnitKey } from "@/lib/requests/unit";
 import { useLoading } from "@/components/providers/LoadingProvider";
+import CommentModal from "@/components/requests/CommentModal";
 
 type TabKey = "all" | "applied-pending" | "applied-rejected" | "approver-pending";
 type MineKey = "me" | "others";
@@ -44,7 +45,6 @@ export default function RequestsListClient({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"approve" | "reject">("approve");
   const [modalTargetId, setModalTargetId] = useState<string | null>(null); // requestId
-  const [comment, setComment] = useState("");
 
   // クエリ組み立て
   const query = useMemo(() => {
@@ -92,7 +92,7 @@ export default function RequestsListClient({
     })();
   }, [query]);
 
-  async function submitAction() {
+  async function doApproveReject(comment: string) {
     if (!modalTargetId) {
       return;
     }
@@ -111,7 +111,6 @@ export default function RequestsListClient({
       const responseJson = await res.json();
       if (responseJson.ok) {
         setModalOpen(false);
-        setComment("");
         setModalTargetId(null);
         load();
 
@@ -287,30 +286,13 @@ export default function RequestsListClient({
       </div>
 
       {/* コメント入力モーダル */}
-      <Modal show={modalOpen} onHide={() => setModalOpen(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalAction === "approve" ? "承認コメント (任意)" : "差戻コメント (任意)"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Group>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="コメントを入力（任意）"
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button className="flex-fill flex-sm-grow-0" variant="secondary" onClick={() => setModalOpen(false)}>
-            キャンセル
-          </Button>
-          <Button className="flex-fill flex-sm-grow-0" onClick={submitAction}>{modalAction === "approve" ? "承認" : "差戻"}</Button>
-        </Modal.Footer>
-      </Modal>
+      <CommentModal
+        show={modalOpen}
+        title={modalAction === "approve" ? "承認コメント (任意)" : "差戻コメント (任意)"}
+        doneButtonLabel={modalAction === "approve" ? "承認" : "差戻"}
+        onClose={() => setModalOpen(false)}
+        onDone={(comment) => doApproveReject(comment)}
+      />
     </div>
   );
 }
