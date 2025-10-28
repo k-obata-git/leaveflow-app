@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Form, Modal, Alert, } from "react-bootstrap";
+import { Button, Card, Alert, } from "react-bootstrap";
 import { CheckLg } from "react-bootstrap-icons";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -11,6 +11,7 @@ import useApproverStore, { ApproverStore } from "@/store/approverUseStore";
 import RequestEdit from "@/components/requests/RequestEdit";
 import ApproverPicker from "@/components/requests/ApproverPicker";
 import { useLoading } from "@/components/providers/LoadingProvider";
+import CommentModal from "@/components/requests/CommentModal";
 
 export default function RequestClient({ requestId }: { requestId?: string }) {
   const router = useRouter();
@@ -23,7 +24,6 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
 
   // 送信モーダル（再申請のコメント任意）
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmComment, setConfirmComment] = useState("");
 
   const stepper = [
     { n: 1, label: "基本情報" },
@@ -96,7 +96,7 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
   // 保存・申請
   // draft: 下書き保存の場合、true
   // resubmit: 再申請の場合、true
-  async function submit(draft = false, resubmit = false) {
+  async function submit(draft = false, resubmit = false, comment?: string) {
     showLoading();
     try {
       const url = requestId ? `/api/requests/${requestId}` : `/api/requests`;
@@ -118,6 +118,7 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
           ...req,
           draft,
           resubmit,
+          comment,
         }),
       });
 
@@ -233,28 +234,14 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
       </div>
 
       {/* 再申請確認モーダル（コメント任意・スマホ全画面） */}
-      <Modal show={confirmOpen} onHide={() => setConfirmOpen(false)} fullscreen="sm-down">
-        <Modal.Header closeButton>
-          <Modal.Title>再申請の送信</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="text-muted small">再申請を送信します。必要なら補足コメントを入力してください（任意）。</p>
-          <Form.Group>
-            <Form.Label className="visually-hidden">コメント</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={5}
-              value={confirmComment}
-              onChange={(e) => setConfirmComment(e.target.value)}
-              placeholder="コメント（任意）"
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button className="flex-fill flex-sm-grow-0" variant="secondary" onClick={() => setConfirmOpen(false)}>キャンセル</Button>
-          <Button className="flex-fill flex-sm-grow-0" onClick={() => submit(false, true)} disabled={!canSubmit}>送信する</Button>
-        </Modal.Footer>
-      </Modal>
+      <CommentModal
+        show={confirmOpen}
+        title={"再申請の送信"}
+        note={"再申請を送信します。必要なら補足コメントを入力してください。"}
+        doneButtonLabel={"送信する"}
+        onClose={() => setConfirmOpen(false)}
+        onDone={(comment) => submit(false, true, comment)}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, Col, Form, Modal, Row, Table, } from "react-bootstrap";
+import { Badge, Button, Card, Col, Row, Table, } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Step } from "@/models/requestData";
@@ -13,6 +13,7 @@ import RequestSwitchButton from "@/components/requests/RequestSwitchButton";
 import ApprovalHistory from "@/components/requests/ApprovalHistory";
 import ActivityLog from "@/components/requests/ActivityLog";
 import { useLoading } from "@/components/providers/LoadingProvider";
+import CommentModal from "@/components/requests/CommentModal";
 
 export default function RequestDetailClient({ requestId }: { requestId: string }) {
   const toast = useToast();
@@ -24,7 +25,6 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
   // 承認/差戻モーダル
   const [modalOpen, setModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"approve" | "reject">("approve");
-  const [comment, setComment] = useState("");
 
   const load = async() => {
     showLoading();
@@ -61,7 +61,7 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
     load();
   }, [requestId]);
 
-  async function doApproveReject() {
+  async function doApproveReject(comment: string) {
     showLoading();
     try {
       const path = modalAction === "approve" ? `/api/requests/${requestId}/approve` : `/api/requests/${requestId}/reject`;
@@ -76,7 +76,6 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
       const responseJson = await res.json();
       if (responseJson.ok) {
         setModalOpen(false);
-        setComment("");
         load();
 
         toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
@@ -234,34 +233,14 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
         </Card>
       )}
 
-      {/* 承認/差戻 モーダル（モバイルは全画面） */}
-      <Modal show={modalOpen} onHide={() => setModalOpen(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {modalAction === "approve" ? "承認コメント（任意）" : "差戻コメント（任意）"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Group>
-            <Form.Label className="visually-hidden">コメント</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={5}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="コメントを入力（任意）"
-            />
-          </Form.Group>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button className="flex-fill flex-sm-grow-0" variant="secondary" onClick={() => setModalOpen(false)}>
-            キャンセル
-          </Button>
-          <Button className="flex-fill flex-sm-grow-0" onClick={doApproveReject}>
-            {modalAction === "approve" ? "承認" : "差戻"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* コメント入力モーダル */}
+      <CommentModal
+        show={modalOpen}
+        title={modalAction === "approve" ? "承認コメント (任意)" : "差戻コメント (任意)"}
+        doneButtonLabel={modalAction === "approve" ? "承認" : "差戻"}
+        onClose={() => setModalOpen(false)}
+        onDone={(comment) => doApproveReject(comment)}
+      />
     </div>
   );
 }
