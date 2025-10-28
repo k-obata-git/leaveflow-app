@@ -118,26 +118,24 @@ export default function AdminAuditClient() {
       <div className="cards-mobile">
         {rows?.map(l => (
           <div key={l.id} className="card p-3">
-            <div key={l.id} className="card p-3">
-              <div className="d-flex flex-wrap">
-                <div className="me-auto">
-                  <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
-                </div>
-                <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
+            <div className="d-flex flex-wrap">
+              <div className="me-auto">
+                <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
               </div>
-              <div className="small text-muted mt-2">
-                <span className="me-1">実行者:</span>
-                <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
-              </div>
-              <div className="small text-muted mt-2">
-                {l.request ? <Button variant="link" className="p-0" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}
-              </div>
-              {l.comment && (
-                <div className="p-2 rounded border bg-body-tertiary mt-3">
-                  <div className="text-break">{l.comment}</div>
-                </div>
-              )}
+              <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
             </div>
+            <div className="small text-muted mt-2">
+              <span className="me-1">実行者:</span>
+              <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
+            </div>
+            <div className="small text-muted mt-2">
+              {l.request ? <Button variant="link" className="p-0" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}
+            </div>
+            {l.comment && (
+              <div className="p-2 rounded border bg-body-tertiary mt-3">
+                <div className="text-break">{l.comment}</div>
+              </div>
+            )}
           </div>
         ))}
         {!rows || rows.length===0 && (
