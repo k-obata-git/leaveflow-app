@@ -130,6 +130,7 @@ enum TransactionType {
   GRANT
   CONSUME
   ADJUST
+  CANCEL
 }
 
 model LeaveTransaction {

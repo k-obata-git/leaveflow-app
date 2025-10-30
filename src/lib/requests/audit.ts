@@ -5,12 +5,12 @@ export async function logAction(params: {
   actorId: string;
   action:
     | "CREATE" | "SUBMIT" | "DRAFT_SAVE" | "RESUBMIT"
-    | "UPDATE" | "APPROVE" | "REJECT";
+    | "UPDATE" | "APPROVE" | "REJECT" | "WITHDRAW";
   comment?: string | null;
   meta?: any;
   tx?: any;
 }) {
-  try {
+  // try {
     if(params.tx) {
       await params.tx.auditLog.create({
         data: {
@@ -32,7 +32,7 @@ export async function logAction(params: {
         },
       });
     }
-  } catch {
-    // ログ保存失敗は本処理に影響させない（握りつぶす）
-  }
+  // } catch {
+  //   // ログ保存失敗は本処理に影響させない（握りつぶす）
+  // }
 }

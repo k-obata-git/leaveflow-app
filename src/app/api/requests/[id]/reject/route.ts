@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAction } from "@/lib/requests/audit";
 import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, ValidationError } from "@/lib/api/errors";
+import { validLeaveRequestCommentSchema } from "@/lib/api/validation";
 
 async function notifyRequesterRejected(title: string, requesterId: string) {
   try {
@@ -36,9 +37,15 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     const session = await getServerSession(authOptions);
     const loginUser = session?.user as any;
 
-    const params = await props.params;
-    const { comment } = (await req.json().catch(() => ({}))) as { comment?: string };
+    // パラメータのバリデーションチェック
+    const body = await req.json();
+    const validLeaveRequestComment = validLeaveRequestCommentSchema.safeParse(body);
+    if (!validLeaveRequestComment.success) {
+      throw new ValidationError(validLeaveRequestComment.error.errors[0].message);
+    }
+    const { comment } = validLeaveRequestComment.data;
 
+    const params = await props.params;
     const step = await prisma.approvalStep.findFirst({
       where: {
         requestId: params.id,
@@ -52,35 +59,38 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       throw new ApiError(400, "Already processed");
     }
 
-    await prisma.approvalStep.update({
-      where: {
-        id: step.id
-      },
-      data: {
-        status: "REJECTED",
-        decidedAt: new Date(),
-        comment: comment || null
-      },
-    });
+    return prisma.$transaction(async (tx) => {
+      await tx.approvalStep.update({
+        where: {
+          id: step.id
+        },
+        data: {
+          status: "REJECTED",
+          decidedAt: new Date(),
+          comment: comment || null
+        },
+      });
 
-    const request = await prisma.leaveRequest.update({
-      where: {
-        id: params.id
-      },
-      data: {
-        status: "REJECTED"
-      },
-    });
+      const request = await tx.leaveRequest.update({
+        where: {
+          id: params.id
+        },
+        data: {
+          status: "REJECTED"
+        },
+      });
 
-    await logAction({
-      requestId: params.id,
-      actorId: loginUser.id,
-      action: "REJECT",
-      comment: comment || null,
-    });
+      await logAction({
+        requestId: params.id,
+        actorId: loginUser.id,
+        action: "REJECT",
+        comment: comment || null,
+        tx: tx,
+      });
 
-    await notifyRequesterRejected(request.title, request.requesterId);
+      await notifyRequesterRejected(request.title, request.requesterId);
 
-    return null;
+      return null;
+    })
   })
 }

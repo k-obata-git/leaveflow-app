@@ -56,46 +56,49 @@ export async function POST(req: Request) {
       throw new ApiError(400, "Approver required");
     }
 
-    const created = await prisma.leaveRequest.create({
-      data: {
-        requesterId: loginUser.id,
-        title: String(title),
-        reason: reason ? String(reason) : null,
-        unit: String(unit) as any,
-        startDate: new Date(String(startDate)),
-        endDate: new Date(String(endDate)),
-        hours: typeof hours === "number" ? hours : null,
-        status: isDraft ? "DRAFT" : "PENDING",
-        steps: {
-          create: (approverIds as string[]).map((id, idx) => ({
-            approverId: id,
-            order: idx + 1,
-            status: isDraft ? "DRAFT" : "PENDING",
-          })),
+    return prisma.$transaction(async (tx) => {
+      const created = await tx.leaveRequest.create({
+        data: {
+          requesterId: loginUser.id,
+          title: String(title),
+          reason: reason ? String(reason) : null,
+          unit: String(unit) as any,
+          startDate: new Date(String(startDate)),
+          endDate: new Date(String(endDate)),
+          hours: typeof hours === "number" ? hours : null,
+          status: isDraft ? "DRAFT" : "PENDING",
+          steps: {
+            create: (approverIds as string[]).map((id, idx) => ({
+              approverId: id,
+              order: idx + 1,
+              status: isDraft ? "DRAFT" : "PENDING",
+            })),
+          },
         },
-      },
-      include: {
-        requester: true,
-        steps: true
-      },
-    });
+        include: {
+          requester: true,
+          steps: true
+        },
+      });
 
-    await logAction({
-      requestId: created.id,
-      actorId: loginUser.id,
-      action: isDraft ? "DRAFT_SAVE" : "SUBMIT",
-      meta: {
-        unit,
-        startDate,
-        endDate,
-        approverCount: approverIds?.length ?? 0
-      },
-    });
+      await logAction({
+        requestId: created.id,
+        actorId: loginUser.id,
+        action: isDraft ? "DRAFT_SAVE" : "SUBMIT",
+        meta: {
+          unit,
+          startDate,
+          endDate,
+          approverCount: approverIds?.length ?? 0
+        },
+        tx: tx,
+      });
 
-    if (!isDraft && Array.isArray(approverIds) && approverIds.length > 0) {
-      await notifyApprovers(approverIds, created.title, created.requester?.name);
-    }
+      if (!isDraft && Array.isArray(approverIds) && approverIds.length > 0) {
+        await notifyApprovers(approverIds, created.title, created.requester?.name);
+      }
 
-    return created;
+      return created;
+    })
   })
 }

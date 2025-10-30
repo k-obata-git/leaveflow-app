@@ -6,15 +6,9 @@ export interface RequestStore {
   requestData: RequestData,
   selectedApproverIds: [],
   selectedApprovers: User[],
-  canApproveReject: boolean,
-  canResubmit: boolean,
-  isDraft: boolean,
   setRequestData: (requestData: RequestData) => void,
   setSelectedApproverIds: (selectedApproverIds: any) => void,
   setSelectedApprovers: (approvers: User[]) => void,
-  setCanApproveReject: (canApproveReject: boolean) => void,
-  setCanResubmit: (canResubmit: boolean) => void,
-  setIsDraft: (isDraft: boolean) => void,
   getStartDateStr: (split?: string) => string,
   getEndDateStr: (split?: string) => string,
   reset: () => void,
@@ -39,9 +33,11 @@ const useRequestStore = create<RequestStore>((set, get) => ({
       role: "USER",
     },
     approverIds: [],
-    isDraft: true,
-    canResubmit: false,
     canApproveReject: false,
+    canResubmit: false,
+    isDraft: false,
+    canWithdraw: false,
+    canDelete: false,
     myStepId: null,
     me: {
       id: "",
@@ -53,9 +49,6 @@ const useRequestStore = create<RequestStore>((set, get) => ({
   },
   selectedApproverIds: [],
   selectedApprovers: [],
-  canApproveReject: false,
-  canResubmit: false,
-  isDraft: false,
   setSelectedApproverIds: (val) => set(() => ({
     selectedApproverIds: val
   })),
@@ -64,15 +57,6 @@ const useRequestStore = create<RequestStore>((set, get) => ({
   })),
   setRequestData: (requestData) => set((state) => ({
     requestData: requestData
-  })),
-  setCanApproveReject: (val) => set(() => ({
-    canApproveReject: val
-  })),
-  setCanResubmit: (val) => set(() => ({
-    canResubmit: val
-  })),
-  setIsDraft: (val) => set(() => ({
-    isDraft: val
   })),
   getStartDateStr: (split) => {
     const sd = new Date(get().requestData.startDate);
@@ -101,9 +85,11 @@ const useRequestStore = create<RequestStore>((set, get) => ({
         role: "USER",
       },
       approverIds: [],
-      isDraft: true,
-      canResubmit: false,
       canApproveReject: false,
+      canResubmit: false,
+      isDraft: false,
+      canWithdraw: false,
+      canDelete: false,
       myStepId: null,
       me: {
         id: "",
@@ -115,9 +101,6 @@ const useRequestStore = create<RequestStore>((set, get) => ({
     },
     selectedApproverIds: [],
     selectedApprovers: [],
-    canApproveReject: false,
-    canResubmit: false,
-    isDraft: false,
   }))
 }));
 

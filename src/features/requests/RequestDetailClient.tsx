@@ -43,9 +43,6 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
       const responseJson = await res.json();
       if (responseJson.ok) {
         requestStore.setRequestData(responseJson.data);
-        requestStore.setCanApproveReject(responseJson.data.canApproveReject);
-        requestStore.setCanResubmit(responseJson.data.canResubmit);
-        requestStore.setIsDraft(responseJson.data.isDraft);
       } else {
         console.error(responseJson);
       }
@@ -81,6 +78,7 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
         toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
       } else {
         console.error(responseJson);
+        toast.error(`${responseJson.error}`);
       }
     } catch (e: any) {
       toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
@@ -154,7 +152,7 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
                     <Button variant="outline-secondary" className="ms-auto" onClick={() => router.replace("/requests")}>一覧へ戻る</Button>
                   </div>
                   <div className="">
-                    {requestStore.canApproveReject && requestStore.requestData.status !== "REJECTED" && (
+                    {requestStore.requestData.canApproveReject && requestStore.requestData.status !== "REJECTED" && (
                       <>
                         <Button variant="success" className="flex-fill flex-sm-grow-0" onClick={() => { setModalAction("approve"); setModalOpen(true); }} >
                           承認
@@ -166,8 +164,8 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
                     )}
                   </div>
                   <div className="">
-                    {(requestStore.canResubmit || requestStore.isDraft) && (
-                      <Button variant="outline-warning" className="flex-fill flex-sm-grow-0" onClick={() => router.push(`/requests/${requestId}/edit`)}>{requestStore.canResubmit ? "再申請" : "編集"}</Button>
+                    {(requestStore.requestData.canResubmit || requestStore.requestData.isDraft) && (
+                      <Button variant="outline-warning" className="flex-fill flex-sm-grow-0" onClick={() => router.push(`/requests/${requestId}/edit`)}>{requestStore.requestData.canResubmit ? "再申請" : "編集"}</Button>
                     )}
                   </div>
                 </div>

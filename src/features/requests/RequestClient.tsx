@@ -57,9 +57,6 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
       const responseJson = await res.json();
       if (responseJson.ok) {
         requestStore.setRequestData(responseJson.data);
-        requestStore.setCanApproveReject(responseJson.data.canApproveReject);
-        requestStore.setCanResubmit(responseJson.data.canResubmit);
-        requestStore.setIsDraft(responseJson.data.isDraft);
         requestStore.setSelectedApprovers((approverStore.approvers.filter((a) => responseJson.data.approverIds.includes(a.id)) || []));
       } else {
         console.error(responseJson);
@@ -118,7 +115,7 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
           ...req,
           draft,
           resubmit,
-          comment,
+          comment: comment ?? null,
         }),
       });
 
@@ -151,7 +148,7 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
 
   return (
     <div className="container-fluid px-0 px-sm-2">
-      <h1>{`${!requestId ? "申請作成" : requestStore.isDraft ? "編集" : "再申請"}`}</h1>
+      <h1>{`${!requestId ? "申請作成" : requestStore.requestData.isDraft ? "編集" : "再申請"}`}</h1>
 
       <div className="stepper" style={{gridTemplateColumns: `repeat(${stepper.length}, 1fr)`}}>
         {stepper.map((s) => (
@@ -207,8 +204,8 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
               <div className="d-grid gap-2">
                 <Button size="lg" onClick={() => submit(false, false)} hidden={!!requestId} disabled={!canSubmit}>申請送信</Button>
                 <Button size="lg" variant="outline-secondary" onClick={() => submit(true, false)} hidden={!!requestId} disabled={!canSubmit}>下書き保存</Button>
-                <Button size="lg" onClick={() => submit(false, true)} hidden={!requestStore.isDraft} disabled={!canSubmit}>申請送信</Button>
-                <Button size="lg" onClick={() => setConfirmOpen(true)} hidden={!requestStore.canResubmit} disabled={!canSubmit}>再申請</Button>
+                <Button size="lg" onClick={() => submit(false, true)} hidden={!requestStore.requestData.isDraft} disabled={!canSubmit}>申請送信</Button>
+                <Button size="lg" onClick={() => setConfirmOpen(true)} hidden={!requestStore.requestData.canResubmit} disabled={!canSubmit}>再申請</Button>
                 <Button size="lg" variant="outline-secondary" onClick={() => submit(false, false)} hidden={!requestId} disabled={!canSubmit}>保存</Button>
               </div>
             </>
