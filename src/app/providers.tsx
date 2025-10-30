@@ -14,7 +14,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         approverStore.reset();
 
         const [approversResponse] = await Promise.all([
-          fetch(`/api/users`, { cache: "no-store" }),
+          fetch(`/api/requests/approver`, { cache: "no-store" }),
         ]);
 
         const responseJson = await approversResponse.json();

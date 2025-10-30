@@ -22,18 +22,20 @@ export async function GET(req: Request) {
       // take: limit,
       select: {
         id: true,
-        createdAt: true,
+        type: true,
         amountDays: true,
-        note: true
+        note: true,
+        createdAt: true,
       },
     });
 
     // PrismaのDecimal対策で number へ
     return tx.map(t => ({
       id: t.id,
-      createdAt: t.createdAt,
+      type: t.type,
       amountDays: Number(t.amountDays),
       note: t.note ?? null,
+      createdAt: t.createdAt,
     }));
   })
 }

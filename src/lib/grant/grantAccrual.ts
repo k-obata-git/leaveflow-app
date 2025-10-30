@@ -369,7 +369,10 @@ export async function autoGrantForUser(userId: string, now = new Date()) {
       where: { userId },
       select: { startDate: true },
     });
-    if (!profile?.startDate) return { ok: false as const, reason: "startDate not set" };
+
+    if (!profile?.startDate) {
+      return { ok: false as const, reason: "startDate not set" };
+    }
 
     const entitlement = entitlementAsOfToday(startOfDay(new Date(profile.startDate)), today);
     const current = norm.newCurrent;

@@ -20,6 +20,8 @@ type Row = {
   unit: UnitKey;
   status: RequestStatusKey;
   requesterName?: string;
+  canWithdraw: boolean;
+  canDelete: boolean,
 };
 
 export default function RequestsListClient({
@@ -43,7 +45,7 @@ export default function RequestsListClient({
 
   // modal（承認/差戻 コメント）
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalAction, setModalAction] = useState<"approve" | "reject">("approve");
+  const [modalAction, setModalAction] = useState<"approve" | "reject" | "withdraw">("approve");
   const [modalTargetId, setModalTargetId] = useState<string | null>(null); // requestId
 
   // クエリ組み立て
@@ -117,6 +119,59 @@ export default function RequestsListClient({
         toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
       } else {
         console.error(responseJson);
+        toast.error(`${responseJson.error}`);
+      }
+    } catch (e: any) {
+      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function doDelete(id: string) {
+    showLoading();
+    try {
+      const res = await fetch(`/api/requests/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      });
+
+      load();
+      toast.success("削除しました");
+    } catch (e: any) {
+      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function doWithdraw(comment: string) {
+    if (!modalTargetId) {
+      return;
+    }
+
+    showLoading();
+    try {
+      const res = await fetch(`/api/requests/${modalTargetId}/withdraw`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ comment }),
+      });
+
+      const responseJson = await res.json();
+      if (responseJson.ok) {
+        setModalOpen(false);
+        setModalTargetId(null);
+        load();
+
+        toast.success("取下しました");
+      } else {
+        console.error(responseJson);
+        toast.error(`${responseJson.error}`);
       }
     } catch (e: any) {
       toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
@@ -186,8 +241,7 @@ export default function RequestsListClient({
               <th>単位</th>
               {tab === "approver-pending" && <th>申請者</th>}
               <th>ステータス</th>
-              <th>詳細</th>
-              {tab === "approver-pending" && <th>操作</th>}
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -205,25 +259,26 @@ export default function RequestsListClient({
                 </td>
                 <td className="text-nowrap">
                   <Button variant="outline-primary" size="sm" onClick={() => router.push(`/requests/${r.id}`)} >詳細</Button>
+                  {tab === "approver-pending" && (
+                    <>
+                      <Button variant="success" size="sm" className="ms-2 me-2"
+                        onClick={() => {setModalAction("approve"); setModalTargetId(r.id); setModalOpen(true); }}>
+                        承認
+                      </Button>
+                      <Button variant="outline-danger" size="sm"
+                        onClick={() => {setModalAction("reject"); setModalTargetId(r.id); setModalOpen(true); }}>
+                        差戻
+                      </Button>
+                    </>
+                  )}
+                  {r.canDelete && (
+                    <Button variant="outline-danger" size="sm" className="ms-2" onClick={() => doDelete(r.id)}>削除</Button>
+                  )}
+                  {r.canWithdraw && (
+                    <Button variant="outline-danger" size="sm" className="ms-2"
+                      onClick={() => {setModalAction("withdraw"); setModalTargetId(r.id); setModalOpen(true); }}>取下</Button>
+                  )}
                 </td>
-                {tab === "approver-pending" && (
-                  <td className="text-nowrap">
-                    <Button variant="success" size="sm" className="me-2"
-                      onClick={() => {
-                        setModalAction("approve");
-                        setModalTargetId(r.id);
-                        setModalOpen(true);
-                      }}
-                    >承認</Button>
-                    <Button variant="outline-danger" size="sm"
-                      onClick={() => {
-                        setModalAction("reject");
-                        setModalTargetId(r.id);
-                        setModalOpen(true);
-                      }}
-                    >差戻</Button>
-                  </td>
-                )}
               </tr>
             ))}
             {rows.length === 0 && (
@@ -277,6 +332,19 @@ export default function RequestsListClient({
                   </div>
                 </>
               )}
+              {row.canDelete && (
+                <div className="flex-fill d-grid">
+                  <Button variant="outline-danger" size="sm" className="ms-2" onClick={() => doDelete(row.id)}>削除</Button>
+                </div>
+              )}
+              {row.canWithdraw && (
+                <div className="flex-fill d-grid">
+                  <Button variant="outline-danger" size="sm" className="ms-2"
+                    onClick={() => { setModalAction("withdraw"); setModalTargetId(row.id); setModalOpen(true); }}>
+                    取下
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -288,10 +356,10 @@ export default function RequestsListClient({
       {/* コメント入力モーダル */}
       <CommentModal
         show={modalOpen}
-        title={modalAction === "approve" ? "承認コメント (任意)" : "差戻コメント (任意)"}
-        doneButtonLabel={modalAction === "approve" ? "承認" : "差戻"}
+        title={modalAction === "withdraw" ? "取下コメント (任意)" : modalAction ===  "approve" ? "承認コメント (任意)" : "差戻コメント (任意)"}
+        doneButtonLabel={modalAction === "withdraw" ? "取下" : modalAction === "approve" ? "承認" : "差戻"}
         onClose={() => setModalOpen(false)}
-        onDone={(comment) => doApproveReject(comment)}
+        onDone={(comment) => modalAction === "withdraw" ? doWithdraw(comment) : doApproveReject(comment)}
       />
     </div>
   );

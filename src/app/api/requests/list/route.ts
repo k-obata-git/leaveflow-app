@@ -75,7 +75,9 @@ export async function GET(req: Request) {
         endDate: r.endDate,
         unit: r.unit,
         status: r.status,
-        requesterName: r.requester.name || ""
+        requesterName: r.requester.name || "",
+        canWithdraw: role === "ADMIN" && r.status === "APPROVED",
+        canDelete: r.requesterId === loginUser.id && ["DRAFT", "REJECTED"].includes(r.status),
       }));
     }
   })

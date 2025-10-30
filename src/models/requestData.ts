@@ -12,7 +12,7 @@ export type Step = {
 
 export type Log = {
   id: string;
-  action: "CREATE"|"SUBMIT"|"DRAFT_SAVE"|"RESUBMIT"|"UPDATE"|"APPROVE"|"REJECT";
+  action: "CREATE"|"SUBMIT"|"DRAFT_SAVE"|"RESUBMIT"|"UPDATE"|"APPROVE"|"REJECT"|"WITHDRAW";
   comment?: string|null;
   createdAt: string;
   actor?: { id: string; name?: string|null; email?: string|null } | null;
@@ -37,9 +37,11 @@ export type RequestData = {
     role: "ADMIN" | "USER" | "APPROVER";
   };
   approverIds: string[];
-  isDraft: boolean;
-  canResubmit: boolean;
   canApproveReject: boolean;
+  canResubmit: boolean;
+  isDraft: boolean;
+  canWithdraw: boolean;
+  canDelete: boolean;
   myStepId: string | null;
   me: {
     id: string;

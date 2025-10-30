@@ -3,7 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logAction } from "@/lib/requests/audit";
 import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, ValidationError } from "@/lib/api/errors";
+import { validLeaveRequestCommentSchema } from "@/lib/api/validation";
 
 async function notifyRequesterApproved(requestId: string, title: string, requesterId: string) {
   try {
@@ -36,9 +37,15 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     const session = await getServerSession(authOptions);
     const loginUser = session?.user as any;
 
-    const params = await props.params;
-    const { comment } = (await req.json().catch(() => ({}))) as { comment?: string };
+    // パラメータのバリデーションチェック
+    const body = await req.json();
+    const validLeaveRequestComment = validLeaveRequestCommentSchema.safeParse(body);
+    if (!validLeaveRequestComment.success) {
+      throw new ValidationError(validLeaveRequestComment.error.errors[0].message);
+    }
+    const { comment } = validLeaveRequestComment.data;
 
+    const params = await props.params;
     const step = await prisma.approvalStep.findFirst({
       where: {
         requestId: params.id,
@@ -53,77 +60,79 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
       throw new ApiError(400, "Already processed");
     }
 
-    await prisma.approvalStep.update({
-      where: {
-        id: step.id
-      },
-      data: {
-        status: "APPROVED",
-        decidedAt: new Date(),
-        comment: comment || null
-      },
-    });
-
-    await logAction({
-      requestId: params.id,
-      actorId: loginUser.id,
-      action: "APPROVE",
-      comment: comment || null,
-    });
-
-    const all = await prisma.approvalStep.findMany({
-      where: {
-        requestId: params.id
-      }
-    });
-
-    const allApproved = all.every((s) => s.status === "APPROVED");
-    if (allApproved) {
-      const request = await prisma.leaveRequest.update({
+    return prisma.$transaction(async (tx) => {
+      await tx.approvalStep.update({
         where: {
-          id: params.id
+          id: step.id
         },
         data: {
-          status: "APPROVED"
-        },
-        include: {
-          requester: true
+          status: "APPROVED",
+          decidedAt: new Date(),
+          comment: comment || null
         },
       });
 
-      // 日数消化
-      const hoursPerDay = Number(process.env.HOURS_PER_DAY || "8");
-      let days = 1.0;
-      if (request.unit === "HALF_DAY") {
-        days = 0.5;
-      }
-      if (request.unit === "HOURLY") {
-        const totalMin = (request.hours || 0) * 60 + (request.minutes || 0);
-        days = Math.max(0, totalMin / 60 / hoursPerDay);
-      }
-      await prisma.leaveTransaction.create({
-        data: {
-          userId: request.requesterId,
-          type: "CONSUME",
-          amountDays: -days as any,
-          relatedRequestId: request.id,
-          note: request.title,
-        },
+      await logAction({
+        requestId: params.id,
+        actorId: loginUser.id,
+        action: "APPROVE",
+        comment: comment || null,
+        tx: tx,
       });
-      await prisma.leaveBalance.updateMany({
+
+      const all = await tx.approvalStep.findMany({
         where: {
-          userId: request.requesterId
-        },
-        data: {
-          currentDays: {
-            decrement: days as any
-          }
-        },
+          requestId: params.id
+        }
       });
 
-      await notifyRequesterApproved(request.id, request.title, request.requesterId);
-    }
+      const allApproved = all.every((s) => s.status === "APPROVED");
+      if (allApproved) {
+        const request = await tx.leaveRequest.update({
+          where: {
+            id: params.id
+          },
+          data: {
+            status: "APPROVED"
+          },
+          include: {
+            requester: true
+          },
+        });
 
-    return null;
+        // 日数消化
+        const hoursPerDay = Number(process.env.HOURS_PER_DAY || "8");
+        let days = 1.0;
+        if (request.unit === "HALF_DAY") {
+          days = 0.5;
+        }
+        if (request.unit === "HOURLY") {
+          days = Math.max(0, (request.hours || 0) / hoursPerDay);
+        }
+        await tx.leaveTransaction.create({
+          data: {
+            userId: request.requesterId,
+            type: "CONSUME",
+            amountDays: -days as any,
+            relatedRequestId: request.id,
+            note: request.title,
+          },
+        });
+        await tx.leaveBalance.updateMany({
+          where: {
+            userId: request.requesterId
+          },
+          data: {
+            currentDays: {
+              decrement: days as any
+            }
+          },
+        });
+
+        await notifyRequesterApproved(request.id, request.title, request.requesterId);
+      }
+
+      return null;
+    })
   })
 }

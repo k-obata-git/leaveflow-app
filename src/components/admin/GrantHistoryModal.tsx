@@ -8,9 +8,10 @@ import { useLoading } from "../providers/LoadingProvider";
 
 export type GrantTx = {
   id: string;
-  createdAt: string;
-  amountDays: number;      // 付与日数（+）
+  type: "GRANT" | "ADJUST" | "CONSUME" | "CANCEL";
+  amountDays: number;
   note?: string | null;
+  createdAt: string;
 };
 
 export default function GrantHistoryModal({
@@ -72,7 +73,7 @@ export default function GrantHistoryModal({
                     <tr key={tx.id}>
                       <td>{new Date(tx.createdAt).toLocaleDateString()}</td>
                       <td>
-                        <Badge bg={Number(tx.amountDays) > 0 ? "success" : "danger"}>{Number(tx.amountDays) > 0 ? "+" : ""}{Number(tx.amountDays)} 日</Badge>
+                        <Badge bg={tx.type === "CANCEL" ? "warning" : tx.type === "GRANT" ? "success" : "danger"}>{Number(tx.amountDays) > 0 ? "+" : ""}{Number(tx.amountDays)} 日</Badge>
                       </td>
                       <td className="text-break">{tx.note || "-"}</td>
                     </tr>

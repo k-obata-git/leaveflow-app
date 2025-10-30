@@ -16,6 +16,15 @@ export const validLeaveRequestActionSchema = z.object({
 });
 
 /**
+ * コメント
+ */
+export const validLeaveRequestCommentSchema = z.object({
+  comment: z.string()
+    .max(1000, { message: "コメントは1000文字以内で入力してください" })
+    .nullable(),
+});
+
+/**
  * 申請情報
  */
 export const validLeaveRequestSchema = z.object({
