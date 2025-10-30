@@ -168,10 +168,11 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
         });
       }
 
+      const action = !resubmit ? "UPDATE" : target.status === "REJECTED" ? "RESUBMIT" : "SUBMIT";
       await logAction({
         requestId: params.id,
         actorId: loginUser.id,
-        action: resubmit ? "RESUBMIT" : "UPDATE",
+        action: action,
         meta: {
           title,
           reason,
