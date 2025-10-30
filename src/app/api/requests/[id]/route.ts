@@ -198,7 +198,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
  * @returns 
  */
 export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
-  return handleRequest(req, true, async (req) => {
+  return handleRequest(req, false, async (req) => {
     const session = await getServerSession(authOptions);
     const loginUser = session?.user as any;
 
