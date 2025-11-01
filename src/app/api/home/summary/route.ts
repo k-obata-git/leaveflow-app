@@ -13,10 +13,45 @@ export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     const loginUser = session?.user as any;
 
-    const [pendingMy, rejectedMy, approvalsPending, balance, txLastYear] = await Promise.all([
+    const reqs = await prisma.leaveRequest.findMany({
+      where: {
+        status: "PENDING",
+        AND: {
+          steps: {
+            some: {
+              approverId: loginUser.id,
+              status: "PENDING"
+            }
+          }
+        }
+      },
+      include: {
+        steps: true,
+      },
+    });
+
+    let approvalsPending = 0;
+    if(process.env.STAGED_APPROVAL === "true") {
+      // 段階承認の場合、自分の順番に到達している申請のみ承認待ち件数としてカウントする
+      for (let i = 0; i < reqs.length; i++) {
+        const req = reqs[i];
+        if(req.steps.length > 1) {
+          const myStep = req.steps.find(s => s.approverId === loginUser.id);
+          const prevStep = req.steps.find(s => s.order === myStep?.order! - 1);
+          if(!prevStep || prevStep.status === "APPROVED") {
+            approvalsPending++;
+          }
+        } else {
+          approvalsPending++;
+        }
+      }
+    } else {
+      approvalsPending = reqs.length;
+    }
+
+    const [pendingMy, rejectedMy, balance, txLastYear] = await Promise.all([
       prisma.leaveRequest.count({ where: { requesterId: loginUser.id, status: "PENDING" } }),
       prisma.leaveRequest.count({ where: { requesterId: loginUser.id, status: "REJECTED" } }),
-      prisma.approvalStep.count({ where: { approverId: loginUser.id, status: "PENDING" } }),
       prisma.leaveBalance.findFirst({ where: { userId: loginUser.id } }),
       prisma.leaveTransaction.aggregate({
         where: {
