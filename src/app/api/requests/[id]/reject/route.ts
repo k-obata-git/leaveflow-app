@@ -46,23 +46,41 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     const { comment } = validLeaveRequestComment.data;
 
     const params = await props.params;
-    const step = await prisma.approvalStep.findFirst({
+    const steps = await prisma.approvalStep.findMany({
+      select: {
+        id: true,
+        approverId: true,
+        order: true,
+        status: true,
+      },
       where: {
-        requestId: params.id,
-        approverId: loginUser.id
+        requestId: params.id
+      },
+      orderBy: {
+        order: "asc"
       },
     });
-    if (!step) {
+    if (!steps) {
       throw new ApiError(403, "No step");
     }
-    if (step.status !== "PENDING") {
+
+    const myStep = steps?.find(s => s.approverId === loginUser.id);
+    if(!myStep || myStep.status !== "PENDING") {
       throw new ApiError(400, "Already processed");
+    }
+
+    // 段階承認の場合、ひとつ前の承認者が承認済みかどうかチェック
+    if(process.env.STAGED_APPROVAL === "true" && myStep.order > 1) {
+      const prevStep = steps.find(s => s.order === myStep.order - 1);
+      if(!prevStep || prevStep.status !== "APPROVED") {
+        throw new ApiError(400, "Unexpected processed");
+      }
     }
 
     return prisma.$transaction(async (tx) => {
       await tx.approvalStep.update({
         where: {
-          id: step.id
+          id: myStep.id
         },
         data: {
           status: "REJECTED",

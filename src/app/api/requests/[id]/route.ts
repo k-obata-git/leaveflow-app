@@ -44,8 +44,19 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     const isDraft = row.status === "DRAFT" && row.requesterId === loginUser.id;
 
     // 追加：自分のステップが PENDING なら詳細画面から承認/差戻可能
-    const myStep = row.steps.find((s) => s.approverId === loginUser.id);
-    const canApproveReject = !!myStep && myStep.status === "PENDING";
+    const myStep = row.steps?.find(s => s.approverId === loginUser.id) || null;
+
+    let canApproveReject = false;
+    // 段階承認の場合、ひとつ前の承認者が承認済みかどうかチェック
+    
+    if(process.env.STAGED_APPROVAL === "true" && myStep && myStep.order > 1) {
+      const prevStep = row.steps?.find(s => s.order === myStep!.order - 1);
+      if(prevStep && prevStep.status === "APPROVED") {
+        canApproveReject = true;
+      }
+    } else {
+      canApproveReject = !!myStep && myStep.status === "PENDING";
+    }
 
     const logs = await prisma.auditLog.findMany({
       where: {
