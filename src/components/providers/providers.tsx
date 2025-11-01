@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import useApproverStore, { ApproverStore } from "@/store/approverUseStore";
 import { SessionProvider } from "next-auth/react";
+import { approver } from "@/lib/clientApi";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const approverStore: ApproverStore = useApproverStore();
@@ -13,20 +14,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       try {
         approverStore.reset();
 
-        const [approversResponse] = await Promise.all([
-          fetch(`/api/requests/approver`, { cache: "no-store" }),
-        ]);
-
-        const responseJson = await approversResponse.json();
-        if(approversResponse.ok) {
-          approverStore.setApprovers(responseJson.data);
-        } else {
-          console.error(responseJson);
-        }
+        const res = await approver();
+        approverStore.setApprovers(res);
       } catch (e: any) {
-        // console.log(e.message)
       } finally {
-
       }
     })();
   }, []);

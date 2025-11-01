@@ -1,16 +1,3 @@
-async function _jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json", ...(init?.headers||{})
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json();
-}
-
 async function jsonFetch<T>(url: string, init?: RequestInit) {
   const res = await fetch(url, {
     ...init,
@@ -20,7 +7,11 @@ async function jsonFetch<T>(url: string, init?: RequestInit) {
     cache: "no-store",
   });
 
-  const responseJson = await res.json();
+  if(init?.method === "DELETE" && res.status === 204) {
+    return;
+  }
+
+  const responseJson = await res?.json();
   if (res.ok) {
     return responseJson.data;
   } else {

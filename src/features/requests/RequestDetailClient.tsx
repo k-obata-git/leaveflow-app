@@ -14,6 +14,7 @@ import ApprovalHistory from "@/components/requests/ApprovalHistory";
 import ActivityLog from "@/components/requests/ActivityLog";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import CommentModal from "@/components/requests/CommentModal";
+import { approveRequests, rejectRequests, requests } from "@/lib/clientApi";
 
 export default function RequestDetailClient({ requestId }: { requestId: string }) {
   const toast = useToast();
@@ -32,22 +33,10 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
     requestStore.reset();
 
     try {
-      const res = await fetch(`/api/requests/${requestId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        cache: "no-store",
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        requestStore.setRequestData(responseJson.data);
-      } else {
-        console.error(responseJson);
-      }
+      const res = await requests(requestId);
+      requestStore.setRequestData(res);
     } catch (e: any) {
-      toast.error(`${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "申請情報取得に失敗しました"}`);
     } finally {
       hideLoading();
     }
@@ -61,27 +50,16 @@ export default function RequestDetailClient({ requestId }: { requestId: string }
   async function doApproveReject(comment: string) {
     showLoading();
     try {
-      const path = modalAction === "approve" ? `/api/requests/${requestId}/approve` : `/api/requests/${requestId}/reject`;
-      const res = await fetch(path, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ comment }),
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        setModalOpen(false);
-        load();
-
-        toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
+      if(modalAction === "approve") {
+        await approveRequests(requestId, { comment });
       } else {
-        console.error(responseJson);
-        toast.error(`${responseJson.error}`);
+        await rejectRequests(requestId, { comment });
       }
+      setModalOpen(false);
+      load();
+      toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
     } catch (e: any) {
-      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "操作に失敗しました"}`);
     } finally {
       hideLoading();
     }

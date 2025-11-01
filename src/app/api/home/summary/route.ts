@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { handleRequest } from "@/lib/api/apiHandler";
+import { handleRequest } from "@/lib/server/apiHandler";
 
 /**
  * 申請サマリ取得

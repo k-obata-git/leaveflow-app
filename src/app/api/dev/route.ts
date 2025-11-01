@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { handleRequest } from "@/lib/api/apiHandler";
+import { handleRequest } from "@/lib/server/apiHandler";
 import { logAction } from "@/lib/requests/audit";
-import { validLeaveRequestIdSchema, validLeaveRequestActionSchema } from "@/lib/api/validation";
-import { ApiError, ValidationError } from "@/lib/api/errors";
+import { validLeaveRequestIdSchema, validLeaveRequestActionSchema } from "@/lib/server/validation";
+import { ApiError, ValidationError } from "@/lib/server/errors";
 
 /**
  * 申請一覧取得（開発用）

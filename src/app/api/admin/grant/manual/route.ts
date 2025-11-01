@@ -1,5 +1,5 @@
-import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError } from "@/lib/api/errors";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { ApiError } from "@/lib/server/errors";
 import { manualGrantForUser } from "@/lib/grant/grantAccrual";
 
 export async function POST(req: Request) {

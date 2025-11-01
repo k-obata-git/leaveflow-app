@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { handleRequest } from "@/lib/api/apiHandler";
+import { handleRequest } from "@/lib/server/apiHandler";
 
 /**
  * ユーザ一覧取得

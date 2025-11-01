@@ -12,6 +12,7 @@ import RequestEdit from "@/components/requests/RequestEdit";
 import ApproverPicker from "@/components/requests/ApproverPicker";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import CommentModal from "@/components/requests/CommentModal";
+import { postRequests, putRequests, requests } from "@/lib/clientApi";
 
 export default function RequestClient({ requestId }: { requestId?: string }) {
   const router = useRouter();
@@ -46,23 +47,11 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
 
     showLoading();
     try {
-      const res = await fetch(`/api/requests/${requestId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        cache: "no-store",
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        requestStore.setRequestData(responseJson.data);
-        requestStore.setSelectedApprovers((approverStore.approvers.filter((a) => responseJson.data.approverIds.includes(a.id)) || []));
-      } else {
-        console.error(responseJson);
-      }
+      const res = await requests(requestId);
+      requestStore.setRequestData(res);
+      requestStore.setSelectedApprovers((approverStore.approvers.filter((a) => res.approverIds.includes(a.id)) || []));
     } catch (e: any) {
-      toast.error(`読み込みに失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "申請情報取得に失敗しました"}`);
     } finally {
       hideLoading();
     }
@@ -72,6 +61,48 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
   useEffect(() => {
     load();
   }, [requestId]);
+
+  // 保存・申請
+  // draft: 下書き保存の場合、true
+  // resubmit: 再申請の場合、true
+  async function submit(draft = false, resubmit = false, comment?: string) {
+    showLoading();
+    try {
+      const req = {
+        title: requestStore.requestData.title,
+        reason: requestStore.requestData.reason,
+        unit: requestStore.requestData.unit,
+        startDate: requestStore.requestData.startDate,
+        endDate: requestStore.requestData.endDate,
+        hours: requestStore.requestData.hours,
+        approverIds: requestStore.selectedApprovers.map((a) => a.id),
+        draft: draft,
+        resubmit: resubmit,
+      }
+
+      if(requestId) {
+        await putRequests(requestId, { ...req, comment: comment ?? null });
+        toast.success(resubmit ? "申請を送信しました" : "保存しました");
+      } else {
+        await postRequests({ ...req });
+        toast.success(draft ? "下書きを保存しました" : "申請を送信しました");
+      }
+      // コメントモーダル閉じる
+      setConfirmOpen(false);
+
+      if(requestId) {
+        // 遷移元画面へ戻す
+        router.back();
+      } else {
+        // 一覧画面に遷移
+        router.push("/requests");
+      }
+    } catch (e: any) {
+      toast.error(`${e?.message || "操作に失敗しました"}`);
+    } finally {
+      hideLoading();
+    }
+  }
 
   // バリデーション
   const canSubmit = useMemo(() => {
@@ -88,63 +119,10 @@ export default function RequestClient({ requestId }: { requestId?: string }) {
     }
 
     return true;
-  }, [requestStore.requestData.title, requestStore.requestData.startDate, requestStore.requestData.endDate, requestStore.requestData.unit, requestStore.requestData.hours, requestStore.selectedApprovers.length]);
-
-  // 保存・申請
-  // draft: 下書き保存の場合、true
-  // resubmit: 再申請の場合、true
-  async function submit(draft = false, resubmit = false, comment?: string) {
-    showLoading();
-    try {
-      const url = requestId ? `/api/requests/${requestId}` : `/api/requests`;
-      const method = requestId ? "PUT" : "POST";
-      const req = {
-        title: requestStore.requestData.title,
-        reason: requestStore.requestData.reason,
-        unit: requestStore.requestData.unit,
-        startDate: requestStore.requestData.startDate,
-        endDate: requestStore.requestData.endDate,
-        hours: requestStore.requestData.hours,
-        approverIds: requestStore.selectedApprovers.map((a) => a.id),
-      }
-
-      const res = await fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...req,
-          draft,
-          resubmit,
-          comment: comment ?? null,
-        }),
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        toast.success(draft ? "下書きを保存しました" : "申請を送信しました");
-        // 再申請の場合、モーダル閉じる
-        if(resubmit) {
-          setConfirmOpen(false);
-        }
-
-        if(requestId) {
-          // 遷移元画面へ戻す
-          router.back();
-        } else {
-          // 一覧画面に遷移
-          router.push("/requests");
-        }
-      } else {
-        console.error(responseJson);
-        toast.error(`${responseJson.error}`);
-      }
-    } catch (e: any) {
-      console.error(e);
-      toast.error(`失敗しました: ${e?.error || "エラー"}`);
-    } finally {
-      hideLoading();
-    }
-  }
+  }, [
+    requestStore.requestData.title, requestStore.requestData.startDate, requestStore.requestData.endDate,
+    requestStore.requestData.unit, requestStore.requestData.hours, requestStore.selectedApprovers.length
+  ]);
 
   return (
     <div className="container-fluid px-0 px-sm-2">

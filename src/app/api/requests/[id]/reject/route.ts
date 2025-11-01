@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAction } from "@/lib/requests/audit";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError, ValidationError } from "@/lib/api/errors";
-import { validLeaveRequestCommentSchema } from "@/lib/api/validation";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { ApiError, ValidationError } from "@/lib/server/errors";
+import { validLeaveRequestCommentSchema } from "@/lib/server/validation";
 
 async function notifyRequesterRejected(title: string, requesterId: string) {
   try {
