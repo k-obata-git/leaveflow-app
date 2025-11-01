@@ -7,7 +7,7 @@ import { ReactNode } from "react";
 import { Container, Navbar, Nav, NavbarToggle, NavbarCollapse, NavbarBrand, } from "react-bootstrap";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import Providers from "@/app/providers";
+import Providers from "../components/providers/providers";
 import ClientProviders from "@/components/providers/ClientProviders";
 import SideNav from "@/components/layout/SideNav";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";

@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAction } from "@/lib/requests/audit";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError, ValidationError } from "@/lib/api/errors";
-import { validLeaveRequestSchema } from "@/lib/api/validation";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { ApiError, ValidationError } from "@/lib/server/errors";
+import { validLeaveRequestSchema } from "@/lib/server/validation";
 
 /** Pushユーティリティは存在すれば使う（無ければ黙ってスキップ） */
 async function notifyApprovers(approverIds: string[], title: string, requesterName?: string | null) {

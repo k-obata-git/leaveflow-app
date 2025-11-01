@@ -8,6 +8,7 @@ import { getRequestStatusItem, RequestStatusKey } from "@/lib/requests/requestSt
 import { getRequestUnitItem, UnitKey } from "@/lib/requests/unit";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import CommentModal from "@/components/requests/CommentModal";
+import { approveRequests, deleteRequests, rejectRequests, requestsList, withdrawRequests } from "@/lib/clientApi";
 
 type TabKey = "all" | "applied-pending" | "applied-rejected" | "approver-pending";
 type MineKey = "me" | "others";
@@ -67,22 +68,10 @@ export default function RequestsListClient({
     showLoading();
     setRows([]);
     try {
-      const res = await fetch(`/api/requests/list?${query}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        cache: "no-store",
-      });
-
-      const responseJson = await res.json();
-      if (res.ok) {
-        setRows(responseJson.data);
-      } else {
-        console.error(responseJson);
-      }
+      const res = await requestsList(query);
+      setRows(res);
     } catch (e: any) {
-      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "申請情報取得に失敗しました"}`);
     } finally {
       hideLoading();
     }
@@ -101,28 +90,16 @@ export default function RequestsListClient({
 
     showLoading();
     try {
-      const path = modalAction === "approve" ? `/api/requests/${modalTargetId}/approve` : `/api/requests/${modalTargetId}/reject`;
-      const res = await fetch(path, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ comment }),
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        setModalOpen(false);
-        setModalTargetId(null);
-        load();
-
-        toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
+      if(modalAction === "approve") {
+        await approveRequests(modalTargetId, { comment });
       } else {
-        console.error(responseJson);
-        toast.error(`${responseJson.error}`);
+        await rejectRequests(modalTargetId, { comment });
       }
+      setModalOpen(false);
+      setModalTargetId(null);
+      toast.success(modalAction === "approve" ? "承認しました" : "差戻しました");
     } catch (e: any) {
-      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "操作に失敗しました"}`);
     } finally {
       hideLoading();
     }
@@ -131,17 +108,11 @@ export default function RequestsListClient({
   async function doDelete(id: string) {
     showLoading();
     try {
-      const res = await fetch(`/api/requests/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json"
-        },
-      });
-
+      await deleteRequests(id);
       load();
       toast.success("削除しました");
     } catch (e: any) {
-      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "操作に失敗しました"}`);
     } finally {
       hideLoading();
     }
@@ -154,27 +125,13 @@ export default function RequestsListClient({
 
     showLoading();
     try {
-      const res = await fetch(`/api/requests/${modalTargetId}/withdraw`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ comment }),
-      });
-
-      const responseJson = await res.json();
-      if (responseJson.ok) {
-        setModalOpen(false);
-        setModalTargetId(null);
-        load();
-
-        toast.success("取下しました");
-      } else {
-        console.error(responseJson);
-        toast.error(`${responseJson.error}`);
-      }
+      await withdrawRequests(modalTargetId, { comment });
+      setModalOpen(false);
+      setModalTargetId(null);
+      load();
+      toast.success("取下しました");
     } catch (e: any) {
-      toast.error(`操作に失敗しました：${e?.message || "エラー"}`);
+      toast.error(`${e?.message || "操作に失敗しました"}`);
     } finally {
       hideLoading();
     }

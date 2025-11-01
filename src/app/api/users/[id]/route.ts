@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError } from "@/lib/api/errors";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { ApiError } from "@/lib/server/errors";
 
 /**
  * ユーザ情報取得

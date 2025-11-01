@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { validUserSchema } from "@/lib/api/validation";
-import { ValidationError } from "@/lib/api/errors";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { validUserSchema } from "@/lib/server/validation";
+import { ValidationError } from "@/lib/server/errors";
 
 /**
  * ユーザ登録更新

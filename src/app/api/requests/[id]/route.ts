@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAction } from "@/lib/requests/audit";
-import { ApiError, ValidationError } from "@/lib/api/errors";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { validLeaveRequestCommentSchema, validLeaveRequestSchema } from "@/lib/api/validation";
+import { ApiError, ValidationError } from "@/lib/server/errors";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { validLeaveRequestCommentSchema, validLeaveRequestSchema } from "@/lib/server/validation";
 
 /**
  * 申請情報取得

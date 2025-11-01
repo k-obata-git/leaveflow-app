@@ -2,9 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logAction } from "@/lib/requests/audit";
-import { handleRequest } from "@/lib/api/apiHandler";
-import { ApiError, ValidationError } from "@/lib/api/errors";
-import { validLeaveRequestCommentSchema } from "@/lib/api/validation";
+import { handleRequest } from "@/lib/server/apiHandler";
+import { ApiError, ValidationError } from "@/lib/server/errors";
+import { validLeaveRequestCommentSchema } from "@/lib/server/validation";
 
 async function notifyRequesterApproved(requestId: string, title: string, requesterId: string) {
   try {
