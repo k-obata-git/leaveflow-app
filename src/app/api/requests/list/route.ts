@@ -21,32 +21,63 @@ export async function GET(req: Request) {
     const role = loginUser?.role as string | undefined;
 
     if (tab === "approver-pending") {
-      const steps = await prisma.approvalStep.findMany({
+      const reqs = await prisma.leaveRequest.findMany({
         where: {
-          approverId: loginUser.id,
-          status: "PENDING"
-        },
-        include: {
-          request: {
-            include: {
-              requester: true
+          status: "PENDING",
+          AND: {
+            steps: {
+              some: {
+                approverId: loginUser.id,
+                status: "PENDING"
+              }
             }
           }
+        },
+        include: {
+          steps: true,
+          requester: true
         },
         orderBy: {
           createdAt: "desc"
         }
       });
 
-      return steps.map(s => ({
-        id: s.requestId,
-        title: s.request.title,
-        startDate: s.request.startDate,
-        endDate: s.request.endDate,
-        unit: s.request.unit,
-        status: s.request.status,
-        requesterName: s.request.requester?.name || ""
-      }));
+      if(process.env.STAGED_APPROVAL === "true") {
+        // 段階承認の場合、自分の順番に到達している申請のみ返却する
+        let rows = []
+        for (let i = 0; i < reqs.length; i++) {
+          const req = reqs[i];
+          if(req.steps.length > 1) {
+            const myStep = req.steps.find(s => s.approverId === loginUser.id);
+            const prevStep = req.steps.find(s => s.order === myStep?.order! - 1);
+            if(!prevStep || prevStep.status === "APPROVED") {
+              rows.push(req);
+            }
+          } else {
+            rows.push(req);
+          }
+        }
+        return rows.map(r => ({
+          id: r.id,
+          title: r.title,
+          startDate: r.startDate,
+          endDate: r.endDate,
+          unit: r.unit,
+          status: r.status,
+          requesterName: r.requester?.name || ""
+        }));
+      } else {
+        // 並列承認の場合、自分が承認者として設定されている承認待ちの申請のみ返却する
+        return reqs.map(r => ({
+          id: r.id,
+          title: r.title,
+          startDate: r.startDate,
+          endDate: r.endDate,
+          unit: r.unit,
+          status: r.status,
+          requesterName: r.requester?.name || ""
+        }));
+      }
     } else {
       const whereBase: any = {};
       // 管理者以外の場合、自身の申請情報のみを取得対象とする
