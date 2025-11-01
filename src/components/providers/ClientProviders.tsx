@@ -1,11 +1,14 @@
 "use client";
 
+import { LoadingProvider } from "./LoadingProvider";
 import { ToastProvider } from "./ToastProvider";
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ToastProvider>
-      {children}
-    </ToastProvider>
+    <LoadingProvider>
+      <ToastProvider>
+        {children}
+      </ToastProvider>
+    </LoadingProvider>
   );
 }
