@@ -11,7 +11,7 @@ import useApproverStore, { ApproverStore } from "@/store/approverUseStore";
 import RequestEdit from "@/components/requests/RequestEdit";
 import ApproverPicker from "@/components/requests/ApproverPicker";
 import { useLoading } from "@/components/providers/LoadingProvider";
-import CommentModal from "@/components/requests/CommentModal";
+import CommentModal from "@/components/modal/CommentModal";
 import { postRequests, putRequests, requests } from "@/lib/clientApi";
 
 export default function RequestClient({ requestId }: { requestId?: string }) {

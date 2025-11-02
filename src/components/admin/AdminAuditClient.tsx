@@ -54,6 +54,16 @@ export default function AdminAuditClient() {
     load();
   }, []);
 
+  const getCreatedAt = (createdAt: string) => {
+    const createdAtDate = new Date(createdAt).toLocaleString();
+    return (
+      <>
+        <p className="m-0">{createdAtDate.substring(0, 10)}</p>
+        <p className="m-0">{createdAtDate.substring(10)}</p>
+      </>
+    )
+  }
+
   return (
     <div>
       <div className="mb-3 d-flex flex-wrap gap-2">
@@ -94,15 +104,21 @@ export default function AdminAuditClient() {
           <tbody>
             {rows?.map(l => (
               <tr key={l.id}>
-                <td>{new Date(l.createdAt).toLocaleString()}</td>
-                <td>
+                <td style={{width: "6rem" }}>
+                  {getCreatedAt(l.createdAt)}
+                </td>
+                <td style={{width: "5rem" }}>
                   <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
                 </td>
-                <td>{l.actor?.name || l.actor?.email || l.actor?.id}</td>
-                <td>
-                  {l.request ? <Button variant="link" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}
+                <td className="text-truncate" style={{width: "12rem", maxWidth: "12rem"}}>
+                  {l.actor?.name || l.actor?.email || l.actor?.id}
                 </td>
-                <td className="text-break">{l.comment || "-"}</td>
+                <td style={{width: "20rem", maxWidth: "20rem"}}>
+                  <Button variant="link" className="text-start text-truncate" onClick={() => router.push(`/requests/${l.request?.id}`)} style={{width: "100%"}}>{l.request?.title}</Button>
+                </td>
+                <td style={{maxWidth: "0"}}>
+                  <p className="text-truncate">{l.comment || "-"}</p>
+                </td>
               </tr>
             ))}
             {!rows || rows.length===0 && (
@@ -124,12 +140,15 @@ export default function AdminAuditClient() {
               </div>
               <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
             </div>
-            <div className="small text-muted mt-2">
+            <div className="small text-muted text-truncate mt-2">
               <span className="me-1">実行者:</span>
               <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
             </div>
+            {/* <td style={{width: "20rem", maxWidth: "20rem"}}>
+              <Button variant="link" className="text-start text-truncate" onClick={() => router.push(`/requests/${l.request?.id}`)} style={{width: "20rem"}}>{l.request?.title}</Button>
+            </td> */}
             <div className="small text-muted mt-2">
-              {l.request ? <Button variant="link" className="p-0" onClick={() => router.push(`/requests/${l.request?.id}`)}>{l.request.title}</Button> : "-"}
+              <Button variant="link" className="text-start text-truncate p-0" onClick={() => router.push(`/requests/${l.request?.id}`)} style={{width: "100%"}}>{l.request?.title}</Button>
             </div>
             {l.comment && (
               <div className="p-2 rounded border bg-body-tertiary mt-3">

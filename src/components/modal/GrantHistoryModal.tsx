@@ -32,6 +32,7 @@ export default function GrantHistoryModal({
   const [rows, setRows] = useState<GrantTx[] | null>(preset ?? null);
 
   useEffect(() => {
+    setRows([]);
     if (!open || preset) {
       return;
     }
@@ -58,7 +59,7 @@ export default function GrantHistoryModal({
       <Modal.Body>
         {(rows?.length ?? 0) > 0 && (
           <>
-            {/* Desktop */}
+            {/* デスクトップ：テーブル */}
             <div className="table-desktop">
               <Table striped hover responsive="sm">
                 <thead>
@@ -82,13 +83,13 @@ export default function GrantHistoryModal({
               </Table>
             </div>
 
-            {/* Mobile */}
+            {/* モバイル：カード */}
             <div className="cards-mobile">
               {rows!.map(tx => (
                 <div key={tx.id} className="card p-3">
                   <div className="d-flex justify-content-between align-items-start mb-1">
                     <div className="small text-muted">{new Date(tx.createdAt).toLocaleDateString()}</div>
-                    <span className={Number(tx.amountDays) > 0 ? "badge text-bg-success" : "badge text-bg-danger"}>{Number(tx.amountDays) > 0 ? "+" : ""}{Number(tx.amountDays)} 日</span>
+                    <span className={tx.type === "CANCEL" ? "badge text-bg-warning" : tx.type === "GRANT" ? "badge text-bg-success" : "badge text-bg-danger"}>{Number(tx.amountDays) > 0 ? "+" : ""}{Number(tx.amountDays)} 日</span>
                   </div>
                   {tx.note && <div className="small text-break">{tx.note}</div>}
                 </div>

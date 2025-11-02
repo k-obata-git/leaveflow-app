@@ -12,7 +12,7 @@ type Props = {
   onDone: (comment: string) => void;
 };
 
-export default function ApproveModal({ show, title, note, doneButtonLabel, onClose, onDone }: Props) {
+export default function CommentModal({ show, title, note, doneButtonLabel, onClose, onDone }: Props) {
   const [comment, setComment] = useState<string>("");
 
   useEffect(() => {
