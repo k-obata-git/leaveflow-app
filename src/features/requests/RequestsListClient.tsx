@@ -7,7 +7,7 @@ import { useToast } from "@/components/providers/ToastProvider";
 import { getRequestStatusItem, RequestStatusKey } from "@/lib/requests/requestStatus";
 import { getRequestUnitItem, UnitKey } from "@/lib/requests/unit";
 import { useLoading } from "@/components/providers/LoadingProvider";
-import CommentModal from "@/components/requests/CommentModal";
+import CommentModal from "@/components/modal/CommentModal";
 import { approveRequests, deleteRequests, rejectRequests, requestsList, withdrawRequests } from "@/lib/clientApi";
 
 type TabKey = "all" | "applied-pending" | "applied-rejected" | "approver-pending";

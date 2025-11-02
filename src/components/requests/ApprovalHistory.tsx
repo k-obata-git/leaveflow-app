@@ -34,11 +34,15 @@ export default function ApprovalHistory() {
             {requestStore.requestData.steps.map((s) => (
               <tr key={s.id}>
                 <td>{s.order}</td>
-                <td>{s.approver?.name || "-"}</td>
-                <td>
+                <td className="text-truncate" style={{width: "12rem", maxWidth: "12rem"}}>
+                  {s.approver?.name || "-"}
+                </td>
+                <td style={{width: "7rem" }}>
                   <Badge bg={getRequestStatusItem(s.status)?.color}>{getRequestStatusItem(s.status)?.label}</Badge>
                 </td>
-                <td>{s.decidedAt ? new Date(s.decidedAt).toLocaleString() : "-"}</td>
+                <td style={{width: "12rem" }}>
+                  {s.decidedAt ? new Date(s.decidedAt).toLocaleString() : "-"}
+                </td>
                 <td className="text-break">{s.comment || "-"}</td>
               </tr>
             ))}

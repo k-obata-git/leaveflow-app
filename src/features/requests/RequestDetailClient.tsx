@@ -13,7 +13,7 @@ import RequestSwitchButton from "@/components/requests/RequestSwitchButton";
 import ApprovalHistory from "@/components/requests/ApprovalHistory";
 import ActivityLog from "@/components/requests/ActivityLog";
 import { useLoading } from "@/components/providers/LoadingProvider";
-import CommentModal from "@/components/requests/CommentModal";
+import CommentModal from "@/components/modal/CommentModal";
 import { approveRequests, rejectRequests, requests } from "@/lib/clientApi";
 
 export default function RequestDetailClient({ requestId }: { requestId: string }) {

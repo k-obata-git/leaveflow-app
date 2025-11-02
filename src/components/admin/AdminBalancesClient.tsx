@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { Table, Button, InputGroup, Form, Row, Col, Badge, } from "react-bootstrap";
 import { adminBalances, adminGrantAuto } from "@/lib/adminApi";
 import { useToast } from "@/components/providers/ToastProvider";
-import GrantHistoryModal from "@/components/admin/GrantHistoryModal";
-import GrantModal from "@/components/admin/GrantModal";
+import GrantHistoryModal from "@/components/modal/GrantHistoryModal";
+import GrantModal from "@/components/modal/GrantModal";
 import { useLoading } from "../providers/LoadingProvider";
 
 type BalanceRow = {

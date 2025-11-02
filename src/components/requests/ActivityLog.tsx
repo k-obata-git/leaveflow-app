@@ -23,11 +23,17 @@ export default function ActivityLog() {
           <tbody>
             {requestStore.requestData.logs && requestStore.requestData.logs.map(l => (
               <tr key={l.id}>
-                <td>{new Date(l.createdAt).toLocaleString()}</td>
-                <td><Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge></td>
-                <td>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</td>
-                <td className="text-break">
-                  {l.comment || "-"}
+                <td style={{width: "12rem" }}>
+                  {new Date(l.createdAt).toLocaleString()}
+                </td>
+                <td style={{width: "5rem" }}>
+                  <Badge bg={getRequestActionItem(l.action)?.color}>{getRequestActionItem(l.action)?.label}</Badge>
+                </td>
+                <td className="text-truncate" style={{width: "12rem", maxWidth: "12rem"}}>
+                  {l.actor?.name || l.actor?.email || l.actor?.id}
+                </td>
+                <td>
+                  <p className="text-break">{l.comment || "-"}</p>
                 </td>
               </tr>
             ))}
@@ -48,7 +54,7 @@ export default function ActivityLog() {
               </div>
               <div className="small text-muted">{new Date(l.createdAt).toLocaleString()}</div>
             </div>
-            <div className="small text-muted mt-2">
+            <div className="small text-muted text-truncate mt-2">
               <span className="me-1">実行者:</span>
               <span>{l.actor?.name || l.actor?.email || l.actor?.id || "-"}</span>
             </div>
